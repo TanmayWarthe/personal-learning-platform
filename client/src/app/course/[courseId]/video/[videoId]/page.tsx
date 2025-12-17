@@ -45,6 +45,13 @@ export default function VideoPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-8">
+      <button
+  onClick={() => window.history.back()}
+  className="text-sm text-blue-600 mb-4"
+>
+  ← Back to Course
+</button>
+
       <p className="text-sm text-gray-500 mb-2">DSA with Love Babbar</p>
 
       <h1 className="text-2xl font-bold mb-6">{video.title}</h1>

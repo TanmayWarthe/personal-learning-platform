@@ -17,8 +17,8 @@ export default function CoursePage() {
 
   const completedCount = videos.filter((v) => v.completed).length;
   const totalCount = videos.length;
-
   const progressPercent = Math.round((completedCount / totalCount) * 100);
+  const badge = getBadge(progressPercent);
 
   useEffect(() => {
     const stored = localStorage.getItem("completedVideoIds");
@@ -54,6 +54,29 @@ export default function CoursePage() {
     );
   }, []);
 
+  function handleContinueLearning() {
+  const nextVideo = videos.find(
+    (v) => v.unlocked && !v.completed
+  );
+
+  if (nextVideo) {
+    window.location.href = `/course/${courseId}/video/${nextVideo.id}`;
+  } else {
+    alert("Course completed 🎉");
+  }
+}
+
+// course badge based on progress
+function getBadge(progress: number) {
+  if (progress <= 20) return "Bronze 🟤";
+  if (progress <= 40) return "Silver ⚪";
+  if (progress <= 60) return "Gold 🟡";
+  if (progress <= 80) return "Platinum 🔵";
+  return "Diamond 💎";
+}
+
+
+
   return (
     <div className="max-w-5xl mx-auto px-6 py-8">
       {/* ================= Course Header ================= */}
@@ -69,16 +92,18 @@ export default function CoursePage() {
             <p className="text-sm text-gray-500">
               Progress: {progressPercent}%
             </p>
+            
 
             <div className="w-full bg-gray-200 h-2 rounded mt-2">
               <div
                 className="bg-black h-2 rounded"
                 style={{ width: `${progressPercent}%` }}
               />
+              <p className="text-sm font-medium mt-1">Badge: {badge}</p>
             </div>
           </span>
 
-          <button className="px-5 py-2 bg-black text-white rounded">
+          <button onClick={handleContinueLearning} className="px-5 py-2 bg-black text-white rounded">
             Continue Learning
           </button>
         </div>
