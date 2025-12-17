@@ -2,7 +2,7 @@
 
 export default function DashboardPage() {
   return (
-    <div className="p-8">
+    <div className="vh-screen max-w-5xl mx-auto px-6 py-8 md:-8">
       {/* Welcome */}
       <h1 className="text-3xl font-bold mb-6">
         Welcome back 👋

@@ -14,7 +14,7 @@ export default function LoginPage() {
         console.log(email , password)
     }
     return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="vh-screen flex justify-center items-center max-w-5xl mx-auto px-6 py-8 md:-8">
 
         <form onSubmit={HandleSubmit}>
 
