@@ -2,21 +2,32 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const authMiddleware = require("./middleware/auth.middleware");
 
+// middleware setup 
 app.use(cors());
 app.use(express.json());
+
+
+// routes setup 
 
 const authRoutes = require("./routes/auth.routes");
 app.use("/auth", authRoutes);
 
-const port = 5000;
- 
+const courseRoutes = require("./routes/course.routes");
+app.use("/courses", courseRoutes);
+
+
+
+// start server
+const port = 5000; 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
 
 
+
+// protected route example
+const authMiddleware = require("./middleware/auth.middleware");
 app.get("/dashboard", authMiddleware, (req, res) => {
   res.json({
     message: "Welcome to dashboard",
@@ -24,8 +35,9 @@ app.get("/dashboard", authMiddleware, (req, res) => {
   });
 });
 
-const pool = require("./config/db");
 
+// database connection test
+const pool = require("./config/db");
 pool.query("SELECT NOW()", (err, res) => {
   if (err) {
     console.error("DB connection error", err);
