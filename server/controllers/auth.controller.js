@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const pool = require("../config/db");
+const jwt = require("jsonwebtoken");
 
 async function registerUser(req, res) {
   try {
@@ -80,13 +81,19 @@ async function loginUser(req, res) {
       });
     }
 
+    const token = jwt.sign(
+      { 
+        userId: user.id, 
+        email: user.email 
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
     // 4️⃣ Success
     res.status(200).json({
       message: "Login successful",
-      user: {
-        id: user.id,
-        email: user.email,
-      },
+      token,
     });
   } catch (error) {
     console.error(error);
@@ -95,6 +102,8 @@ async function loginUser(req, res) {
     });
   }
 }
+
+
 
 
 module.exports = {
