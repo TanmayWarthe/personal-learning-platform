@@ -46,3 +46,15 @@ pool.query("SELECT NOW()", (err, res) => {
   }
 });
 
+
+
+
+
+
+// YouTube playlist fetch test
+const fetchPlaylistVideos = require("./utils/youtube");
+
+app.get("/test-playlist", async (req, res) => {
+  const videos = await fetchPlaylistVideos("PLfqMhTWNBTe137I_EPQd34TsgV6IO55pt&si=gtHCIrhoTr1zmH3N");
+  res.json(videos);
+});
