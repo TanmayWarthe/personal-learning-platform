@@ -54,10 +54,11 @@ async function getCourseVideos(req, res) {
       [courseId]
     );
 
-    res.json(result.rows);
+    // ✅ ALWAYS return an array
+    res.json(result.rows || []);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json([]);
   }
 }
 

@@ -8,7 +8,7 @@ export default function Navbar({ toggleTheme, theme }: { toggleTheme?: () => voi
       <div className="flex items-center space-x-4">
         <a href="/login" className="dark:text-gray-200">Login</a>
         <a href="/dashboard" className="dark:text-gray-200">Dashboard</a>
-        <a href="/course/1" className="dark:text-gray-200">Courses</a>
+        <a href="/courses" className="dark:text-gray-200">Courses</a>
       </div>
     </nav>
   );

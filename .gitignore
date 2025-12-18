@@ -54,3 +54,6 @@ coverage/
 
 # Ignore public runtime data
 public/runtime/
+
+
+raw.txt
