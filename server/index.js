@@ -16,6 +16,8 @@ app.use("/auth", authRoutes);
 const courseRoutes = require("./routes/course.routes");
 app.use("/courses", courseRoutes);
 
+const userRoutes = require("./routes/user.routes");
+app.use("/users", userRoutes);
 
 
 // start server

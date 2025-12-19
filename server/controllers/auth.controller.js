@@ -37,7 +37,15 @@ async function registerUser(req, res) {
     // 5️⃣ Success response
     res.status(201).json({
       message: "User registered successfully",
-      user: newUser.rows[0],
+      // user: newUser.rows[0],
+      // token: jwt.sign(
+      //   { 
+      //     userId: newUser.rows[0].id, 
+      //     email: newUser.rows[0].email 
+      //   },
+      //   process.env.JWT_SECRET,
+      //   { expiresIn: "1d" }
+      // ),
     });
   } catch (error) {
     console.error(error);
