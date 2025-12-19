@@ -2,6 +2,7 @@
 
 import { use } from "react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type Course = {
   id: number;
@@ -21,11 +22,22 @@ export default function CoursePage({
   params: Promise<{ id: string }>;
 }) {
   const { id: courseId } = use(params);
+  const router = useRouter();
 
   const [course, setCourse] = useState<Course | null>(null);
   const [videos, setVideos] = useState<Video[]>([]);
   const [activeTab, setActiveTab] = useState<"overview" | "content">("overview");
   const [loading, setLoading] = useState(true);
+
+
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      router.push("/login");
+    }
+  }, [router]);
 
   /* ================= FETCH COURSE + VIDEOS ================= */
   useEffect(() => {
