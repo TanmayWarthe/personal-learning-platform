@@ -6,14 +6,13 @@ async function registerUser(req, res) {
   try {
     const { name, email, password } = req.body;
 
-    // 1️⃣ Validation
     if (!name || !email || !password) {
       return res.status(400).json({
         message: "All fields are required",
       });
     }
 
-    // 2️⃣ Check if user already exists
+    //  Check if user already exists
     const existingUser = await pool.query(
       "SELECT id FROM users WHERE email = $1",
       [email]
@@ -25,27 +24,17 @@ async function registerUser(req, res) {
       });
     }
 
-    // 3️⃣ Hash password
+    // convert to Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 4️⃣ Insert user into DB
+    // Insert user into DB
     const newUser = await pool.query(
       "INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, email",
       [name, email, hashedPassword]
     );
 
-    // 5️⃣ Success response
     res.status(201).json({
       message: "User registered successfully",
-      // user: newUser.rows[0],
-      // token: jwt.sign(
-      //   { 
-      //     userId: newUser.rows[0].id, 
-      //     email: newUser.rows[0].email 
-      //   },
-      //   process.env.JWT_SECRET,
-      //   { expiresIn: "1d" }
-      // ),
     });
   } catch (error) {
     console.error(error);
@@ -66,7 +55,7 @@ async function loginUser(req, res) {
       });
     }
 
-    // 2️⃣ Find user
+    //  Find user
     const userResult = await pool.query(
       "SELECT id, email, password_hash FROM users WHERE email = $1",
       [email]
@@ -80,7 +69,7 @@ async function loginUser(req, res) {
 
     const user = userResult.rows[0];
 
-    // 3️⃣ Compare password
+    //  Compare password
     const isMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!isMatch) {
@@ -98,7 +87,7 @@ async function loginUser(req, res) {
       { expiresIn: "1d" }
     );
 
-    // 4️⃣ Success
+
     res.status(200).json({
       message: "Login successful",
       token,
