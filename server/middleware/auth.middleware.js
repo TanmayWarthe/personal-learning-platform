@@ -17,9 +17,6 @@ function authMiddleware(req, res, next) {
     return res.status(401).json({ message: "Invalid token" });
   }
 
-  // console.log("Token received:", token);
-  // console.log("JWT_SECRET:", process.env.JWT_SECRET);
-
 }
 
 
