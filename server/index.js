@@ -20,6 +20,15 @@ const userRoutes = require("./routes/user.routes");
 app.use("/users", userRoutes);
 
 
+const dashboardRoutes = require("./routes/dashboard.routes");
+app.use("/dashboard", dashboardRoutes);
+
+
+const videoRoutes = require("./routes/video.routes");
+app.use("/videos", videoRoutes);
+
+
+
 // start server
 const port = 5000; 
 app.listen(port, () => {
