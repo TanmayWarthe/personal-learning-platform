@@ -7,7 +7,7 @@ export default function ProfilePage() {
     name: "Tanmay Sharma",
     email: "tanmay@example.com",
     username: "tanmay_sharma",
-    accountCreated: "2024-01-15",
+    accountCreated: "2024-15-01",
   });
 
   const [stats, setStats] = useState({
