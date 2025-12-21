@@ -31,159 +31,107 @@ export default function VideoPage({
   const [loading, setLoading] = useState(true);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
 
-  // FETCH VIDEO AND COURSE VIDEOS
+  /* ================= FETCH VIDEOS ================= */
   useEffect(() => {
-    async function fetchVideoAndList() {
+    async function fetchData() {
       try {
         const res = await fetch(
           `http://localhost:5000/courses/${id}/videos`
         );
-
         const data = await res.json();
 
         if (!Array.isArray(data)) return;
 
-        // Find current video
         const vid = Number(videoId);
-        const currentVideo = data.find((v: any) => Number(v.id) === vid);
-        setVideo(currentVideo || null);
 
-        // Get all videos for sidebar
-        const allVideos = data.map((v: any) => ({
+        const current = data.find((v) => Number(v.id) === vid);
+        setVideo(current || null);
+
+        const formatted = data.map((v, index) => ({
           id: v.id,
           title: v.title,
           position: v.position,
-          youtube_video_id: v.youtube_video_id
+          completed: false,
+          unlocked: index === 0,
         }));
 
-        // Load completion data
-        const stored = localStorage.getItem("completedVideoIds");
-        const completedIds: number[] = stored ? JSON.parse(stored) : [];
+        setCourseVideos(formatted);
 
-        const videosWithStatus = allVideos.map((video, index) => {
-          const completed = completedIds.includes(video.id);
-          let unlocked = true;
-          
-          if (index > 0) {
-            const prevVideo = allVideos[index - 1];
-            unlocked = completedIds.includes(prevVideo.id) || completed;
-          }
-          
-          return { ...video, completed, unlocked };
-        });
-
-        setCourseVideos(videosWithStatus);
-
-        // Find current video index
-        const index = allVideos.findIndex((v: any) => Number(v.id) === vid);
+        const index = data.findIndex((v) => Number(v.id) === vid);
         setCurrentVideoIndex(index);
-
-      } catch (error) {
-        console.error("Failed to load video", error);
+      } catch (err) {
+        console.error("Video fetch error:", err);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchVideoAndList();
+    fetchData();
   }, [id, videoId]);
 
-  // MARK AS COMPLETED + STREAK
-  function handleMarkCompleted() {
+  /* ================= MARK COMPLETE (DB) ================= */
+  async function handleMarkCompleted() {
     if (!video) return;
 
-    // Completed videos
-    const stored = localStorage.getItem("completedVideoIds");
-    const completed: number[] = stored ? JSON.parse(stored) : [];
-
-    if (!completed.includes(video.id)) {
-      completed.push(video.id);
-      localStorage.setItem("completedVideoIds", JSON.stringify(completed));
-    }
-
-    // streak logic
-    const today = new Date().toISOString().split("T")[0];
-    const streakStored = localStorage.getItem("learningStreak");
-
-    let streakData = {
-      lastDate: today,
-      streak: 1,
-    };
-
-    if (streakStored) {
-      const parsed = JSON.parse(streakStored);
-
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split("T")[0];
-
-      if (parsed.lastDate === today) {
-        streakData = parsed;
-      } else if (parsed.lastDate === yesterdayStr) {
-        streakData = {
-          lastDate: today,
-          streak: parsed.streak + 1,
-        };
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Please login again");
+        return;
       }
-    }
 
-    localStorage.setItem("learningStreak", JSON.stringify(streakData));
+      const res = await fetch(
+        `http://localhost:5000/videos/${video.id}/complete`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    // Show success message and redirect
-    const nextVideo = courseVideos[currentVideoIndex + 1];
-    if (nextVideo && nextVideo.unlocked) {
-      router.push(`/course/${id}/video/${nextVideo.id}`);
-    } else {
-      router.push(`/course/${id}`);
+      if (!res.ok) {
+        alert("Failed to mark video completed");
+        return;
+      }
+
+      // UI update only
+      setCourseVideos((prev) =>
+        prev.map((v) =>
+          v.id === video.id ? { ...v, completed: true } : v
+        )
+      );
+
+      const next = courseVideos[currentVideoIndex + 1];
+      if (next) {
+        router.push(`/course/${id}/video/${next.id}`);
+      } else {
+        router.push(`/course/${id}`);
+      }
+    } catch (err) {
+      console.error("Complete error:", err);
+      alert("Something went wrong");
     }
   }
 
+  /* ================= NAVIGATION ================= */
   function handleNextVideo() {
-    const nextVideo = courseVideos[currentVideoIndex + 1];
-    if (nextVideo && nextVideo.unlocked) {
-      router.push(`/course/${id}/video/${nextVideo.id}`);
+    const next = courseVideos[currentVideoIndex + 1];
+    if (next && next.unlocked) {
+      router.push(`/course/${id}/video/${next.id}`);
     }
   }
 
   function handlePrevVideo() {
-    const prevVideo = courseVideos[currentVideoIndex - 1];
-    if (prevVideo) {
-      router.push(`/course/${id}/video/${prevVideo.id}`);
+    const prev = courseVideos[currentVideoIndex - 1];
+    if (prev) {
+      router.push(`/course/${id}/video/${prev.id}`);
     }
   }
 
-  // STATES
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></div>
-          <p className="text-gray-600">Loading video...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!video) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Video not found</h3>
-          <button
-            onClick={() => router.push(`/course/${id}`)}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Back to Course
-          </button>
-        </div>
-      </div>
-    );
-  }
+  /* ================= STATES ================= */
+  if (loading) return <p className="p-6">Loading...</p>;
+  if (!video) return <p className="p-6">Video not found</p>;
 
   const nextVideo = courseVideos[currentVideoIndex + 1];
   const prevVideo = courseVideos[currentVideoIndex - 1];
