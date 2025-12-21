@@ -42,16 +42,15 @@ export default function Navbar() {
             </span>
           </div>
 
+
+          {/* Profile */}
+          <div className="relative" ref={dropdownRef}>
+
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
             <NavLink href="/dashboard" label="Dashboard" />
             <NavLink href="/courses" label="Courses" />
             <NavLink href="/practice" label="Practice" />
-            <NavLink href="/progress" label="Progress" />
-          </div>
-
-          {/* Profile */}
-          <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setOpen(!open)}
               className="flex items-center gap-2 focus:outline-none"
@@ -65,7 +64,7 @@ export default function Navbar() {
             </button>
 
             {open && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow border z-50">
+              <div className="absolute right-0 mt-72 w-48 bg-white rounded-lg shadow border z-50">
                 <div className="px-4 py-3 border-b">
                   <p className="text-sm font-medium">{user?.name}</p>
                   <p className="text-xs text-gray-500">{user?.email}</p>
@@ -89,21 +88,20 @@ export default function Navbar() {
               </div>
             )}
           </div>
+          </div>
         </div>
 
         {/* Mobile Nav */}
-        <div className="md:hidden py-4 border-t space-y-2">
+        <div className="md:hidden gap-4 py-4 border-t space-y-2">
           <NavLink href="/dashboard" label="Dashboard" />
           <NavLink href="/courses" label="Courses" />
           <NavLink href="/practice" label="Practice" />
-          <NavLink href="/progress" label="Progress" />
         </div>
       </div>
     </nav>
   );
 }
 
-/* ---------- Small Reusable Components ---------- */
 
 function NavLink({ href, label }: { href: string; label: string }) {
   return (
