@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const pool = require("../config/db");
 const jwt = require("jsonwebtoken");
 
+/* ================= REGISTER ================= */
 async function registerUser(req, res) {
   try {
     const { name, email, password } = req.body;
@@ -12,7 +13,6 @@ async function registerUser(req, res) {
       });
     }
 
-    //  Check if user already exists
     const existingUser = await pool.query(
       "SELECT id FROM users WHERE email = $1",
       [email]
@@ -24,14 +24,28 @@ async function registerUser(req, res) {
       });
     }
 
-    // convert to Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert user into DB
     const newUser = await pool.query(
       "INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, email",
       [name, email, hashedPassword]
     );
+
+    const token = jwt.sign(
+      {
+        userId: newUser.rows[0].id,
+        email: newUser.rows[0].email,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
 
     res.status(201).json({
       message: "User registered successfully",
@@ -44,18 +58,17 @@ async function registerUser(req, res) {
   }
 }
 
+/* ================= LOGIN ================= */
 async function loginUser(req, res) {
   try {
     const { email, password } = req.body;
 
-    // 1️⃣ Validation
     if (!email || !password) {
       return res.status(400).json({
         message: "Email and password are required",
       });
     }
 
-    //  Find user
     const userResult = await pool.query(
       "SELECT id, email, password_hash FROM users WHERE email = $1",
       [email]
@@ -68,8 +81,6 @@ async function loginUser(req, res) {
     }
 
     const user = userResult.rows[0];
-
-    //  Compare password
     const isMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!isMatch) {
@@ -79,18 +90,23 @@ async function loginUser(req, res) {
     }
 
     const token = jwt.sign(
-      { 
-        userId: user.id, 
-        email: user.email 
+      {
+        userId: user.id,
+        email: user.email,
       },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
 
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
 
     res.status(200).json({
       message: "Login successful",
-      token,
     });
   } catch (error) {
     console.error(error);
@@ -100,10 +116,21 @@ async function loginUser(req, res) {
   }
 }
 
+/* ================= LOGOUT ================= */
+function logoutUser(req, res) {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+  });
 
-
+  res.status(200).json({
+    message: "Logged out",
+  });
+}
 
 module.exports = {
   registerUser,
   loginUser,
+  logoutUser,
 };
