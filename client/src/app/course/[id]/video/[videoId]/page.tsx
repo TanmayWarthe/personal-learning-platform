@@ -18,11 +18,13 @@ type CourseVideo = {
   unlocked?: boolean;
 };
 
-export default function VideoPage({
-  params,
-}: {
+interface VideoPageProps {
   params: Promise<{ id: string; videoId: string }>;
-}) {
+  onProgressUpdate?: (progress: { percentage: number; completedVideos: number; totalVideos: number }) => void;
+  onDashboardUpdate?: (dashboard: any) => void;
+}
+
+export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate }: VideoPageProps) {
   const { id, videoId } = use(params);
   const router = useRouter();
 
@@ -67,24 +69,17 @@ export default function VideoPage({
         alert("Failed to mark complete");
         return;
       }
-      // After marking complete, refetch backend data to update UI (completion/unlock)
-      setLoading(true);
-      // Wait a moment for backend to update
-      setTimeout(() => {
-        // Refetch course content for up-to-date completion/unlock
-        (async () => {
-          const modulesRes = await fetch(`http://localhost:5000/courses/${id}/content`, { credentials: "include" });
-          const modulesData = await modulesRes.json();
-          const allVideos = Array.isArray(modulesData) ? modulesData.flatMap((m) => m.videos) : [];
-          setCourseVideos(allVideos);
-          const vid = Number(videoId);
-          const current = allVideos.find((v) => Number(v.id) === vid);
-          setVideo(current || null);
-          const index = allVideos.findIndex((v) => Number(v.id) === vid);
-          setCurrentVideoIndex(index);
-          setLoading(false);
-        })();
-      }, 300);
+      // Refetch course content to get updated unlock/completion status
+      const modulesRes = await fetch(`http://localhost:5000/courses/${id}/content`, { credentials: "include" });
+      const modulesData = await modulesRes.json();
+      const allVideos = Array.isArray(modulesData) ? modulesData.flatMap((m) => m.videos) : [];
+      // Find the next video in sequence
+      const next = allVideos[currentVideoIndex + 1];
+      if (next) {
+        router.push(`/course/${id}/video/${next.id}`);
+      } else {
+        router.push(`/course/${id}`);
+      }
     } catch (err) {
       alert("Network error");
     }
