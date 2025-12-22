@@ -31,12 +31,8 @@ export default function CoursesPage() {
     fetchCourses();
   }, []);
 
-useEffect(() => {
-  const token = localStorage.getItem("token");
-  if(!token){
-    router.push("/login")
-  }
-},[router]);
+
+// Removed localStorage token check. Use /users/me endpoint for auth.
 
 
   return (
