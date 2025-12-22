@@ -3,6 +3,7 @@
 import { use } from "react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import VideoPage from "./video/[videoId]/page";
 
 type Course = {
   id: number;
@@ -43,6 +44,7 @@ export default function CoursePage({
   const [completedCount, setCompletedCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [openModule, setOpenModule] = useState<number | null>(null);
+  const [videoPageKey, setVideoPageKey] = useState(0); // for force re-mount
 
   useEffect(() => {
     async function checkAuth() {
@@ -57,48 +59,54 @@ export default function CoursePage({
   }, [router]);
 
   // Fetch course and videos (for progress and overview)
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        // Fetch course info
-        const courseRes = await fetch(
-          `http://localhost:5000/courses/${courseId}`
-        );
-        const courseData = await courseRes.json();
-        setCourse(courseData);
+  async function refetchCourseData() {
+    try {
+      // Fetch course info
+      const courseRes = await fetch(
+        `http://localhost:5000/courses/${courseId}`
+      );
+      const courseData = await courseRes.json();
+      setCourse(courseData);
 
-        // Fetch modules with videos (with completed/unlocked from backend)
-        const modulesRes = await fetch(
-          `http://localhost:5000/courses/${courseId}/content`,
-          { credentials: "include" }
-        );
-        const modulesData = await modulesRes.json();
-        setModules(Array.isArray(modulesData) ? modulesData : []);
+      // Fetch modules with videos (with completed/unlocked from backend)
+      const modulesRes = await fetch(
+        `http://localhost:5000/courses/${courseId}/content`,
+        { credentials: "include" }
+      );
+      const modulesData = await modulesRes.json();
+      setModules(Array.isArray(modulesData) ? modulesData : []);
 
-        // Flatten all videos for progress bar and quick nav
-        const allVideos = (Array.isArray(modulesData)
-          ? modulesData.flatMap((m) => m.videos)
-          : []);
-        setVideos(allVideos);
+      // Flatten all videos for progress bar and quick nav
+      const allVideos = (Array.isArray(modulesData)
+        ? modulesData.flatMap((m) => m.videos)
+        : []);
+      setVideos(allVideos);
 
-        // Fetch progress (completed/total/progress%)
-        const progressRes = await fetch(
-          `http://localhost:5000/courses/${courseId}/progress`,
-          { credentials: "include" }
-        );
-        const progressData = await progressRes.json();
-        setProgress(progressData.percentage || 0);
-        setCompletedCount(progressData.completedVideos || 0);
-        setTotalCount(progressData.totalVideos || allVideos.length);
-      } catch (err) {
-        console.error("Fetch failed", err);
-      } finally {
-        setLoading(false);
-      }
+      // Fetch progress (completed/total/progress%)
+      const progressRes = await fetch(
+        `http://localhost:5000/courses/${courseId}/progress`,
+        { credentials: "include" }
+      );
+      const progressData = await progressRes.json();
+      setProgress(progressData.percentage || 0);
+      setCompletedCount(progressData.completedVideos || 0);
+      setTotalCount(progressData.totalVideos || allVideos.length);
+    } catch (err) {
+      console.error("Fetch failed", err);
+    } finally {
+      setLoading(false);
     }
+  }
 
-    fetchData();
-  }, [courseId]);
+  useEffect(() => {
+    refetchCourseData();
+    // eslint-disable-next-line
+  }, [courseId, videoPageKey]);
+
+  // Handler to update progress from child (video page)
+  function handleProgressUpdate() {
+    setVideoPageKey((k) => k + 1); // force re-mount VideoPage and refetch all data
+  }
 
   // Fetch modules for accordion content
   useEffect(() => {
@@ -154,8 +162,18 @@ export default function CoursePage({
     );
   }
 
+  // If on a video route, render VideoPage and pass callback
+  // This assumes you have a way to detect if you are on a video page (e.g. via router or params)
+  // For demo, always render VideoPage if needed
+
+  // ...existing code...
+  // Example usage:
+  // <VideoPage params={params} onProgressUpdate={handleProgressUpdate} key={videoPageKey} />
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* If you want to always show VideoPage, render here: */}
+      {/* <VideoPage params={params} onProgressUpdate={handleProgressUpdate} key={videoPageKey} /> */}
       {/* Header Card */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-6 py-8">
