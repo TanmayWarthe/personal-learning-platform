@@ -10,6 +10,7 @@ type Course = {
 
 type ContinueLearning = {
   course_id: string;
+  id: string;
   title: string;
   // add more fields as needed
 };
