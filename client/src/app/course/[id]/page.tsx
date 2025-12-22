@@ -16,6 +16,14 @@ type Video = {
   position: number;
   completed?: boolean;
   unlocked?: boolean;
+  youtube_video_id?: string;
+};
+
+type Module = {
+  moduleId: number;
+  title: string;
+  order: number;
+  videos: Video[];
 };
 
 export default function CoursePage({
@@ -28,39 +36,60 @@ export default function CoursePage({
 
   const [course, setCourse] = useState<Course | null>(null);
   const [videos, setVideos] = useState<Video[]>([]);
+  const [modules, setModules] = useState<Module[]>([]);
   const [activeTab, setActiveTab] = useState<"overview" | "content" | "qa" | "resources">("overview");
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
+  const [completedCount, setCompletedCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [openModule, setOpenModule] = useState<number | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      router.push("/login");
+    async function checkAuth() {
+      try {
+        const res = await fetch("http://localhost:5000/users/me", { credentials: "include" });
+        if (!res.ok) throw new Error("Not authenticated");
+      } catch {
+        router.push("/login");
+      }
     }
+    checkAuth();
   }, [router]);
 
-  /* ================= FETCH COURSE + VIDEOS ================= */
+  // Fetch course and videos (for progress and overview)
   useEffect(() => {
     async function fetchData() {
       try {
+        // Fetch course info
         const courseRes = await fetch(
           `http://localhost:5000/courses/${courseId}`
         );
         const courseData = await courseRes.json();
         setCourse(courseData);
 
-        const videosRes = await fetch(
-          `http://localhost:5000/courses/${courseId}/videos`
+        // Fetch modules with videos (with completed/unlocked from backend)
+        const modulesRes = await fetch(
+          `http://localhost:5000/courses/${courseId}/content`,
+          { credentials: "include" }
         );
-        const videosData = await videosRes.json();
+        const modulesData = await modulesRes.json();
+        setModules(Array.isArray(modulesData) ? modulesData : []);
 
-        // 🔒 HARD SAFETY
-        if (Array.isArray(videosData)) {
-          setVideos(videosData);
-        } else {
-          setVideos([]);
-        }
+        // Flatten all videos for progress bar and quick nav
+        const allVideos = (Array.isArray(modulesData)
+          ? modulesData.flatMap((m) => m.videos)
+          : []);
+        setVideos(allVideos);
+
+        // Fetch progress (completed/total/progress%)
+        const progressRes = await fetch(
+          `http://localhost:5000/courses/${courseId}/progress`,
+          { credentials: "include" }
+        );
+        const progressData = await progressRes.json();
+        setProgress(progressData.percentage || 0);
+        setCompletedCount(progressData.completedVideos || 0);
+        setTotalCount(progressData.totalVideos || allVideos.length);
       } catch (err) {
         console.error("Fetch failed", err);
       } finally {
@@ -71,38 +100,28 @@ export default function CoursePage({
     fetchData();
   }, [courseId]);
 
+  // Fetch modules for accordion content
   useEffect(() => {
-    const stored = localStorage.getItem("completedVideoIds");
-    if (!stored) return;
-
-    const completedIds: number[] = JSON.parse(stored);
-
-    setVideos((prev) =>
-      prev.map((video, index) => {
-        // If video completed → unlocked
-        if (completedIds.includes(video.id)) {
-          return { ...video, completed: true, unlocked: true };
+    async function fetchModules() {
+      try {
+        const res = await fetch(
+          `http://localhost:5000/courses/${courseId}/content`
+        );
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setModules(data);
+        } else {
+          setModules([]);
         }
-
-        // Unlock next video if previous is completed
-        const prevVideo = prev[index - 1];
-        if (prevVideo && completedIds.includes(prevVideo.id)) {
-          return { ...video, unlocked: true };
-        }
-
-        return video;
-      })
-    );
-
-    // Calculate progress
-    if (videos.length > 0) {
-      const completedCount = completedIds.length;
-      const progressPercent = Math.round((completedCount / videos.length) * 100);
-      setProgress(progressPercent);
+      } catch (err) {
+        setModules([]);
+      }
     }
-  }, [videos.length]);
+    fetchModules();
+  }, [courseId]);
 
-  /* ================= LOADING ================= */
+  // Removed localStorage logic. All progress and completion comes from backend only.
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -162,7 +181,7 @@ export default function CoursePage({
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  {Math.round((progress / 100) * videos.length)} of {videos.length} lessons completed
+                  {completedCount} of {totalCount} lessons completed
                 </p>
               </div>
             </div>
@@ -170,10 +189,8 @@ export default function CoursePage({
             <div className="flex flex-col space-y-4">
               <button
                 onClick={() => {
-                  // Find first uncompleted video or last completed
-                  const firstUncompleted = videos.find(v => !v.completed && v.unlocked !== false);
+                  const firstUncompleted = videos.find(v => !v.completed && v.unlocked);
                   const firstVideo = videos[0];
-                  
                   if (firstUncompleted) {
                     router.push(`/course/${courseId}/video/${firstUncompleted.id}`);
                   } else if (firstVideo) {
@@ -278,112 +295,86 @@ export default function CoursePage({
           </div>
         )}
 
-{activeTab === "content" && (
-  <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-    <div className="p-6 border-b border-gray-200">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-xl font-semibold text-gray-900">Learning Path</h3>
-          <p className="text-gray-600 text-sm mt-1">Follow the sequence to complete the course</p>
-        </div>
-        <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
-          {progress}% Complete
-        </div>
-      </div>
-    </div>
-    
-    <div className="p-6">
-      {videos.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <p className="text-gray-500">Course content coming soon</p>
-        </div>
-      ) : (
-        <div className="relative">
-          {/* Timeline line */}
-          <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
-          
-          {videos.map((video, index) => (
-            <div key={video.id} className="relative flex items-start mb-8 last:mb-0">
-              {/* Timeline dot */}
-              <div className={`absolute left-5 w-3 h-3 rounded-full border-2 border-white z-10 ${
-                video.completed 
-                  ? 'bg-green-500' 
-                  : video.unlocked
-                  ? 'bg-blue-500'
-                  : 'bg-gray-300'
-              }`}></div>
-              
-              <div className="ml-10 flex-1">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center space-x-2 mb-1">
-                      <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-                        Lesson {video.position}
-                      </span>
-                      {video.completed && (
-                        <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded">
-                          Completed
-                        </span>
-                      )}
-                    </div>
-                    <h4 className={`font-medium ${
-                      video.unlocked === false ? 'text-gray-400' : 'text-gray-900'
-                    }`}>
-                      {video.title}
-                    </h4>
-                  </div>
-                  
-                  <a
-                    href={`/course/${courseId}/video/${video.id}`}
-                    onClick={(e) => {
-                      if (video.unlocked === false) e.preventDefault();
-                    }}
-                    className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                      video.unlocked === false
-                        ? 'text-gray-400 cursor-not-allowed'
-                        : video.completed
-                        ? 'text-green-700 bg-green-50 hover:bg-green-100'
-                        : 'text-blue-700 bg-blue-50 hover:bg-blue-100'
-                    }`}
-                  >
-                    {video.completed ? (
-                      <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>Replay</span>
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                        </svg>
-                        <span>{video.unlocked ? 'Start' : 'Locked'}</span>
-                      </>
-                    )}
-                  </a>
+        {activeTab === "content" && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900">Learning Path</h3>
+                  <p className="text-gray-600 text-sm mt-1">Follow the sequence to complete the course</p>
                 </div>
-                
-                {/* Progress connector for all except last */}
-                {index < videos.length - 1 && (
-                  <div className={`mt-6 h-6 w-0.5 ${
-                    video.completed ? 'bg-green-200' : 'bg-gray-100'
-                  }`}></div>
-                )}
+                <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
+                  {progress}% Complete
+                </div>
               </div>
             </div>
-          ))}
-        </div>
-      )}
-    </div>
-  </div>
-)}
+            <div className="p-6">
+              {modules.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <p className="text-gray-500">Course content coming soon</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {modules.map((module) => (
+                    <div key={module.moduleId} className="border border-gray-200 rounded-lg">
+                      <button
+                        className="w-full flex justify-between items-center px-4 py-3 bg-gray-50 hover:bg-gray-100 focus:outline-none"
+                        onClick={() => setOpenModule(openModule === module.moduleId ? null : module.moduleId)}
+                        aria-expanded={openModule === module.moduleId}
+                      >
+                        <span className="font-semibold text-gray-800 text-left">{module.title}</span>
+                        <svg
+                          className={`w-5 h-5 text-gray-500 transform transition-transform duration-200 ${openModule === module.moduleId ? "rotate-180" : ""}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      {openModule === module.moduleId && (
+                        <div className="px-4 py-2 bg-white">
+                          {module.videos.length === 0 ? (
+                            <div className="text-gray-400 text-sm py-4">No videos in this module.</div>
+                          ) : (
+                            <ul>
+                              {module.videos.map((video) => (
+                                <li
+                                  key={video.id}
+                                  className={`flex items-center justify-between py-2 border-b last:border-b-0 ${!video.unlocked ? 'opacity-50' : ''}`}
+                                >
+                                  <div className="flex items-center space-x-3">
+                                    <span className="text-xs font-mono text-gray-500">#{video.position}</span>
+                                    <span className="text-gray-800">{video.title}</span>
+                                    {video.completed && <span className="ml-2 text-green-600">✔</span>}
+                                    {!video.unlocked && <span className="ml-2 text-gray-400">🔒</span>}
+                                  </div>
+                                  <a
+                                    href={video.unlocked ? `/course/${courseId}/video/${video.id}` : undefined}
+                                    onClick={e => { if (!video.unlocked) e.preventDefault(); }}
+                                    className={`ml-4 px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium transition-colors ${!video.unlocked ? 'pointer-events-none' : ''}`}
+                                  >
+                                    Play
+                                  </a>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {activeTab === "qa" && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
             <div className="text-center py-12">
