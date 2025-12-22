@@ -31,33 +31,20 @@ export default function VideoPage({
   const [loading, setLoading] = useState(true);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
 
-  /* ================= FETCH VIDEOS ================= */
+  /* ================= FETCH VIDEOS & COMPLETED STATUS ================= */
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch(
-          `http://localhost:5000/courses/${id}/videos`
-        );
-        const data = await res.json();
-
-        if (!Array.isArray(data)) return;
+        // Fetch course content (with completed/unlocked from backend)
+        const modulesRes = await fetch(`http://localhost:5000/courses/${id}/content`, { credentials: "include" });
+        const modulesData = await modulesRes.json();
+        const allVideos = Array.isArray(modulesData) ? modulesData.flatMap((m) => m.videos) : [];
+        setCourseVideos(allVideos);
 
         const vid = Number(videoId);
-
-        const current = data.find((v) => Number(v.id) === vid);
+        const current = allVideos.find((v) => Number(v.id) === vid);
         setVideo(current || null);
-
-        const formatted = data.map((v, index) => ({
-          id: v.id,
-          title: v.title,
-          position: v.position,
-          completed: false,
-          unlocked: index === 0,
-        }));
-
-        setCourseVideos(formatted);
-
-        const index = data.findIndex((v) => Number(v.id) === vid);
+        const index = allVideos.findIndex((v) => Number(v.id) === vid);
         setCurrentVideoIndex(index);
       } catch (err) {
         console.error("Video fetch error:", err);
@@ -65,52 +52,41 @@ export default function VideoPage({
         setLoading(false);
       }
     }
-
     fetchData();
   }, [id, videoId]);
-
+  
   /* ================= MARK COMPLETE (DB) ================= */
   async function handleMarkCompleted() {
     if (!video) return;
-
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Please login again");
-        return;
-      }
-
-      const res = await fetch(
-        `http://localhost:5000/videos/${video.id}/complete`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
+      const res = await fetch(`http://localhost:5000/videos/${video.id}/complete`, {
+        method: "POST",
+        credentials: "include"
+      });
       if (!res.ok) {
-        alert("Failed to mark video completed");
+        alert("Failed to mark complete");
         return;
       }
-
-      // UI update only
-      setCourseVideos((prev) =>
-        prev.map((v) =>
-          v.id === video.id ? { ...v, completed: true } : v
-        )
-      );
-
-      const next = courseVideos[currentVideoIndex + 1];
-      if (next) {
-        router.push(`/course/${id}/video/${next.id}`);
-      } else {
-        router.push(`/course/${id}`);
-      }
+      // After marking complete, refetch backend data to update UI (completion/unlock)
+      setLoading(true);
+      // Wait a moment for backend to update
+      setTimeout(() => {
+        // Refetch course content for up-to-date completion/unlock
+        (async () => {
+          const modulesRes = await fetch(`http://localhost:5000/courses/${id}/content`, { credentials: "include" });
+          const modulesData = await modulesRes.json();
+          const allVideos = Array.isArray(modulesData) ? modulesData.flatMap((m) => m.videos) : [];
+          setCourseVideos(allVideos);
+          const vid = Number(videoId);
+          const current = allVideos.find((v) => Number(v.id) === vid);
+          setVideo(current || null);
+          const index = allVideos.findIndex((v) => Number(v.id) === vid);
+          setCurrentVideoIndex(index);
+          setLoading(false);
+        })();
+      }, 300);
     } catch (err) {
-      console.error("Complete error:", err);
-      alert("Something went wrong");
+      alert("Network error");
     }
   }
 
@@ -371,7 +347,7 @@ export default function VideoPage({
             {/* YouTube Disclaimer */}
             <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
               <div className="flex items-start">
-                <svg className="w-5 h-5 text-gray-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-gray-400 mt-0.5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <div>
