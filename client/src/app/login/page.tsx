@@ -19,6 +19,7 @@ export default function LoginPage() {
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
       body: JSON.stringify({ email, password }),
     });
 
@@ -28,8 +29,7 @@ export default function LoginPage() {
       setError(data.message || "Login failed");
       return;
     }
-
-    localStorage.setItem("token", data.token);
+    // Token is now set by backend in HTTP-only cookie
     router.push("/dashboard");
   }
 
