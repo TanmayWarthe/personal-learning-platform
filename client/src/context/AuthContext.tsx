@@ -21,19 +21,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-
-    // 🔴 Token nahi hai → user logged-out
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
-    // 🔵 Token hai → profile fetch karo
+    // Token is now handled via HTTP-only cookie by backend
     fetch("http://localhost:5000/users/me", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      credentials: "include"
     })
       .then((res) => {
         if (!res.ok) throw new Error("Invalid token");
@@ -43,7 +33,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(data);
       })
       .catch(() => {
-        localStorage.removeItem("token");
         setUser(null);
       })
       .finally(() => {
@@ -53,9 +42,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
     function logout() {
-    localStorage.removeItem("token");
-    setUser(null);
-    window.location.href = "/login";
+    // Call backend logout endpoint to clear cookie
+    fetch("http://localhost:5000/auth/logout", {
+      method: "POST",
+      credentials: "include"
+    }).finally(() => {
+      setUser(null);
+      window.location.href = "/login";
+    });
   }
 
   return (
