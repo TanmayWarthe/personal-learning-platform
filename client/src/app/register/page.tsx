@@ -37,6 +37,7 @@ export default function RegisterPage() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({ 
           name: fullName, 
           email, 
@@ -51,9 +52,7 @@ export default function RegisterPage() {
         setIsLoading(false);
         return;
       }
-
-      // Store token and redirect
-      localStorage.setItem("token", data.token);
+      // Token is now set by backend in HTTP-only cookie
       router.push("/dashboard");
 
     } catch (err) {
