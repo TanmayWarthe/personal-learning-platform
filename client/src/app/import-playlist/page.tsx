@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Toast, { ToastType } from "@/components/Toast";
+import { useAuth } from "@/context/AuthContext";
 
 export default function CreateCoursePage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [playlistUrl, setPlaylistUrl] = useState("");
   const [courseTitle, setCourseTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -14,7 +17,15 @@ export default function CreateCoursePage() {
   const [createdCourseId, setCreatedCourseId] = useState<number | null>(null);
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
-  const router = useRouter();
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      setToast({ message: "Please login to import playlists", type: "info" });
+      setTimeout(() => {
+        router.push("/login");
+      }, 1500);
+    }
+  }, [user, authLoading, router]);
 
   const resetForm = () => {
     setPlaylistUrl("");
@@ -62,6 +73,18 @@ export default function CreateCoursePage() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  // Show loading while checking authentication
+  if (authLoading || !user) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </main>
+    );
   }
 
   return (

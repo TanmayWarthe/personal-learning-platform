@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import Toast, { type ToastType } from "@/components/Toast";
 
 type Course = {
   id: number;
@@ -15,12 +17,28 @@ type Course = {
 };
 
 export default function CoursesPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const router = useRouter();
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+
+  // Redirect to login if not authenticated (only after auth check is complete)
+  useEffect(() => {
+    if (!authLoading && !user) {
+      setToast({ message: "Please login to access courses", type: "info" });
+      setTimeout(() => {
+        router.push("/login");
+      }, 1500);
+      return;
+    }
+  }, [user, authLoading, router]);
 
   useEffect(() => {
+    // Only fetch courses if user is authenticated
+    if (!user || authLoading) return;
+
     async function fetchCourses() {
       try {
         setLoading(true);
@@ -44,14 +62,29 @@ export default function CoursesPage() {
     }
 
     fetchCourses();
-  }, []);
+  }, [user, authLoading]);
 
-
-// Removed localStorage token check. Use /users/me endpoint for auth.
-
+  // Show loading while checking authentication
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
       {/* Header Section */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 py-8">

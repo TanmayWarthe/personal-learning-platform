@@ -2,6 +2,8 @@
 
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import Toast, { type ToastType } from "@/components/Toast";
 
 type Course = {
   id: number;
@@ -32,6 +34,7 @@ export default function CoursePage({
 }) {
   // Next.js 16 app router passes params as a Promise in client components – unwrap with React.use
   const { id: courseId } = use(params);
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const [course, setCourse] = useState<Course | null>(null);
@@ -43,19 +46,18 @@ export default function CoursePage({
   const [completedCount, setCompletedCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [openModule, setOpenModule] = useState<number | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
   // const [videoPageKey, setVideoPageKey] = useState(0); // for potential future re-mounts
 
+  // Redirect to login if not authenticated
   useEffect(() => {
-    async function checkAuth() {
-      try {
-        const res = await fetch("http://localhost:5000/users/me", { credentials: "include" });
-        if (!res.ok) throw new Error("Not authenticated");
-      } catch {
+    if (!authLoading && !user) {
+      setToast({ message: "Please login to view course details", type: "info" });
+      setTimeout(() => {
         router.push("/login");
-      }
+      }, 1500);
     }
-    checkAuth();
-  }, [router]);
+  }, [user, authLoading, router]);
 
   // Fetch course and videos (for progress and overview)
   async function refetchCourseData() {
@@ -98,11 +100,25 @@ export default function CoursePage({
   }
 
   useEffect(() => {
+    // Only fetch course data if user is authenticated
+    if (!user || authLoading) return;
     refetchCourseData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courseId]);
+  }, [courseId, user, authLoading]);
 
   // Removed localStorage logic. All progress and completion comes from backend only.
+
+  // Show loading while checking authentication
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -138,6 +154,13 @@ export default function CoursePage({
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
       {/* If you want to always show VideoPage, render here: */}
       {/* <VideoPage params={params} onProgressUpdate={handleProgressUpdate} key={videoPageKey} /> */}
       {/* Header Card */}

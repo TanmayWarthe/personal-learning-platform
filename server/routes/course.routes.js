@@ -11,7 +11,7 @@ const {
   getCourseProgress,
 } = require("../controllers/course.controller");
 
-router.post("/import-playlist", importPlaylist);
+router.post("/import-playlist", authMiddleware, importPlaylist);
 
 // Public course listing/details (with optional auth for progress)
 router.get("/", authMiddleware.optional, getAllCourses);

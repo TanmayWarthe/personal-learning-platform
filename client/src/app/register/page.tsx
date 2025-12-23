@@ -1,10 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Toast, { type ToastType } from "@/components/Toast";
+import { useAuth } from "@/context/AuthContext";
 
 export default function RegisterPage() {
+  const { user, loading: authLoading, refreshUser } = useAuth();
+  const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -13,7 +16,15 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
-  const router = useRouter();
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (!authLoading && user) {
+      setToast({ message: "You are already logged in. Redirecting to dashboard...", type: "info" });
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1500);
+    }
+  }, [user, authLoading, router]);
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
@@ -51,9 +62,12 @@ export default function RegisterPage() {
 
       if (!res.ok) {
         setError((data as any).message || "Registration failed");
+        setIsLoading(false);
         return;
       }
       // Token is now set by backend in HTTP-only cookie
+      // Refresh user data in AuthContext
+      await refreshUser();
       setToast({ message: "Congratulations! Your account has been created.", type: "success" });
       // Give user a moment to read the toast before redirecting
       setTimeout(() => {
@@ -65,6 +79,18 @@ export default function RegisterPage() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <main className="vh-screen mt-16 flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </main>
+    );
   }
 
   return (

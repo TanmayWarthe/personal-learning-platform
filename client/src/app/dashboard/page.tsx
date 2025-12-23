@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import Toast, { type ToastType } from "@/components/Toast";
 
 type Course = {
   id: string;
@@ -14,10 +17,11 @@ type ContinueLearning = {
   title: string;
   // add more fields as needed
 };
-import { useRouter } from "next/navigation";
 
 
 export default function DashboardPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [progress, setProgress] = useState(0);
   const [completedVideos, setCompletedVideos] = useState(0);
   const [totalVideos, setTotalVideos] = useState(0);
@@ -28,21 +32,33 @@ export default function DashboardPage() {
   const [continueLearning, setContinueLearning] = useState<ContinueLearning | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const router = useRouter();
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+
+  // Redirect to login if not authenticated (only after auth check is complete)
+  useEffect(() => {
+    if (!authLoading && !user) {
+      setToast({ message: "Please login to access dashboard", type: "info" });
+      setTimeout(() => {
+        router.push("/login");
+      }, 1500);
+      return;
+    }
+  }, [user, authLoading, router]);
 
   useEffect(() => {
+    // Only fetch dashboard data if user is authenticated
+    if (!user || authLoading) return;
+
     async function fetchDashboard() {
       setLoading(true);
       setError("");
       try {
-        // Auth check and user name
-        const userRes = await fetch("http://localhost:5000/users/me", { credentials: "include" });
-        if (!userRes.ok) throw new Error("Unauthenticated");
-        const userData = await userRes.json();
-        setUserName(userData.name);
+        // Set user name from auth context
+        setUserName(user.name || "");
 
         // Dashboard summary (progress, badge, continueLearning)
         const dashRes = await fetch("http://localhost:5000/dashboard/summary", { credentials: "include" });
+        if (!dashRes.ok) throw new Error("Failed to fetch dashboard");
         const dashData = await dashRes.json();
         setProgress(dashData.progress?.percentage || 0);
         setCompletedVideos(dashData.progress?.completedVideos || 0);
@@ -52,22 +68,39 @@ export default function DashboardPage() {
 
         // Learning streak
         const streakRes = await fetch("http://localhost:5000/progress/streak", { credentials: "include" });
-        const streakData = await streakRes.json();
-        setStreak(streakData.streak || 0);
+        if (streakRes.ok) {
+          const streakData = await streakRes.json();
+          setStreak(streakData.streak || 0);
+        }
 
         // Fetch all courses (for "Your Courses" section)
         const coursesRes = await fetch("http://localhost:5000/courses", { credentials: "include" });
-        const coursesData = await coursesRes.json();
-        setCourses(coursesData);
+        if (coursesRes.ok) {
+          const coursesData = await coursesRes.json();
+          setCourses(coursesData);
+        }
       } catch (err) {
-        setError("Failed to load dashboard. Please login again.");
+        setError("Failed to load dashboard data.");
       } finally {
         setLoading(false);
       }
     }
     fetchDashboard();
-  }, [router]);
+  }, [user, authLoading]);
 
+  // Show loading while checking authentication
+  if (authLoading || !user) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </main>
+    );
+  }
+
+  // Show loading while fetching dashboard data
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -78,22 +111,37 @@ export default function DashboardPage() {
       </main>
     );
   }
+
+  // Show error if data failed to load (but user is authenticated)
   if (error) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <p className="text-red-600">{error}</p>
+          <p className="text-gray-700 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Retry
+          </button>
         </div>
       </main>
     );
   }
   return (
     <main className="min-h-screen bg-gray-50">
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Welcome Section */}
         <div className="mb-8">

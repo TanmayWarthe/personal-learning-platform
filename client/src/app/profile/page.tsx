@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Toast, { type ToastType } from "@/components/Toast";
 import { useAuth } from "@/context/AuthContext";
 
@@ -18,7 +19,8 @@ type Stats = {
 };
 
 export default function ProfilePage() {
-  const { logout } = useAuth();
+  const { user: authUser, loading: authLoading, logout } = useAuth();
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [streak, setStreak] = useState(0);
@@ -29,7 +31,20 @@ export default function ProfilePage() {
   const [tempEmail, setTempEmail] = useState("");
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
+  // Redirect to login if not authenticated
   useEffect(() => {
+    if (!authLoading && !authUser) {
+      setToast({ message: "Please login to view your profile", type: "info" });
+      setTimeout(() => {
+        router.push("/login");
+      }, 1500);
+    }
+  }, [authUser, authLoading, router]);
+
+  useEffect(() => {
+    // Only fetch profile data if user is authenticated
+    if (!authUser || authLoading) return;
+
     async function fetchProfile() {
       setLoading(true);
       setError("");
@@ -68,7 +83,7 @@ export default function ProfilePage() {
       }
     }
     fetchProfile();
-  }, []);
+  }, [authUser, authLoading]);
 
 
   const handleSaveProfile = async () => {
@@ -129,6 +144,18 @@ export default function ProfilePage() {
       default: return "bg-blue-100 text-blue-800";
     }
   };
+
+  // Show loading while checking authentication
+  if (authLoading || !authUser) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </main>
+    );
+  }
 
   if (loading) {
     return (

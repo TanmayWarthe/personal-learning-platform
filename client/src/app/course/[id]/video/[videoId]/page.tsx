@@ -3,6 +3,7 @@
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Toast, { type ToastType } from "@/components/Toast";
+import { useAuth } from "@/context/AuthContext";
 
 type Video = {
   id: number;
@@ -27,6 +28,7 @@ interface VideoPageProps {
 
 export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate }: VideoPageProps) {
   const { id, videoId } = use(params);
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const [video, setVideo] = useState<Video | null>(null);
@@ -34,9 +36,23 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
   const [loading, setLoading] = useState(true);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+  const [authToast, setAuthToast] = useState<{ message: string; type: ToastType } | null>(null);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      setAuthToast({ message: "Please login to watch videos", type: "info" });
+      setTimeout(() => {
+        router.push("/login");
+      }, 1500);
+    }
+  }, [user, authLoading, router]);
 
   /* ================= FETCH VIDEOS & COMPLETED STATUS ================= */
   useEffect(() => {
+    // Only fetch video data if user is authenticated
+    if (!user || authLoading) return;
+
     async function fetchData() {
       try {
         // Fetch course content (with completed/unlocked from backend)
@@ -57,7 +73,7 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
       }
     }
     fetchData();
-  }, [id, videoId]);
+  }, [id, videoId, user, authLoading]);
   
   /* ================= MARK COMPLETE (DB) ================= */
   async function handleMarkCompleted() {
@@ -127,6 +143,18 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
   }
 
   /* ================= STATES ================= */
+  // Show loading while checking authentication
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) return <p className="p-6">Loading...</p>;
   if (!video) return <p className="p-6">Video not found</p>;
 
@@ -141,6 +169,13 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
           message={toast.message}
           type={toast.type}
           onClose={() => setToast(null)}
+        />
+      )}
+      {authToast && (
+        <Toast
+          message={authToast.message}
+          type={authToast.type}
+          onClose={() => setAuthToast(null)}
         />
       )}
       {/* Top Navigation */}

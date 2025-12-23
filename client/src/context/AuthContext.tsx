@@ -12,6 +12,7 @@ type AuthContextType = {
   user: User | null;
   loading: boolean;
   logout: () => void;
+  refreshUser: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,24 +21,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const refreshUser = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("http://localhost:5000/users/me", {
+        credentials: "include"
+      });
+      if (!res.ok) throw new Error("Invalid token");
+      const data = await res.json();
+      setUser(data);
+    } catch (error) {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     // Token is now handled via HTTP-only cookie by backend
-    fetch("http://localhost:5000/users/me", {
-      credentials: "include"
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Invalid token");
-        return res.json();
-      })
-      .then((data) => {
-        setUser(data);
-      })
-      .catch(() => {
-        setUser(null);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    refreshUser();
   }, []);
 
 
@@ -53,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout }}>
+    <AuthContext.Provider value={{ user, loading, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
