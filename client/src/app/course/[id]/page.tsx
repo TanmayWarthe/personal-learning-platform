@@ -1,9 +1,7 @@
 "use client";
 
-import { use } from "react";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import VideoPage from "./video/[videoId]/page";
 
 type Course = {
   id: number;
@@ -32,6 +30,7 @@ export default function CoursePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  // Next.js 16 app router passes params as a Promise in client components – unwrap with React.use
   const { id: courseId } = use(params);
   const router = useRouter();
 
@@ -44,7 +43,7 @@ export default function CoursePage({
   const [completedCount, setCompletedCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [openModule, setOpenModule] = useState<number | null>(null);
-  const [videoPageKey, setVideoPageKey] = useState(0); // for force re-mount
+  // const [videoPageKey, setVideoPageKey] = useState(0); // for potential future re-mounts
 
   useEffect(() => {
     async function checkAuth() {
@@ -100,32 +99,7 @@ export default function CoursePage({
 
   useEffect(() => {
     refetchCourseData();
-    // eslint-disable-next-line
-  }, [courseId, videoPageKey]);
-
-  // Handler to update progress from child (video page)
-  function handleProgressUpdate() {
-    setVideoPageKey((k) => k + 1); // force re-mount VideoPage and refetch all data
-  }
-
-  // Fetch modules for accordion content
-  useEffect(() => {
-    async function fetchModules() {
-      try {
-        const res = await fetch(
-          `http://localhost:5000/courses/${courseId}/content`
-        );
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          setModules(data);
-        } else {
-          setModules([]);
-        }
-      } catch (err) {
-        setModules([]);
-      }
-    }
-    fetchModules();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId]);
 
   // Removed localStorage logic. All progress and completion comes from backend only.
@@ -161,14 +135,6 @@ export default function CoursePage({
       </div>
     );
   }
-
-  // If on a video route, render VideoPage and pass callback
-  // This assumes you have a way to detect if you are on a video page (e.g. via router or params)
-  // For demo, always render VideoPage if needed
-
-  // ...existing code...
-  // Example usage:
-  // <VideoPage params={params} onProgressUpdate={handleProgressUpdate} key={videoPageKey} />
 
   return (
     <div className="min-h-screen bg-gray-50">
