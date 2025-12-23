@@ -13,8 +13,8 @@ const {
 
 router.post("/import-playlist", importPlaylist);
 
-// Public course listing/details
-router.get("/", getAllCourses);
+// Public course listing/details (with optional auth for progress)
+router.get("/", authMiddleware.optional, getAllCourses);
 router.get("/:courseId", getCourseById);
 router.get("/:courseId/videos", getCourseVideos);
 

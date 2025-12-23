@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Toast, { ToastType } from "@/components/Toast";
 
 export default function CreateCoursePage() {
   const [playlistUrl, setPlaylistUrl] = useState("");
@@ -8,58 +10,143 @@ export default function CreateCoursePage() {
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [createdCourseId, setCreatedCourseId] = useState<number | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const router = useRouter();
+
+  const resetForm = () => {
+    setPlaylistUrl("");
+    setCourseTitle("");
+    setDescription("");
+    setError("");
+    setSuccessMessage("");
+    setCreatedCourseId(null);
+  };
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <TopBar />
-        <div className="max-w-2xl mx-auto mt-12 px-4 py-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Course from YouTube Playlist</h1>
-            <p className="text-gray-700">Convert a YouTube playlist into a structured learning course</p>
-          </div>
-          <form className="bg-white rounded-xl border p-8 flex flex-col gap-6 w-full max-w-md">
-            <input type="text" placeholder="YouTube Playlist URL" className="px-4 py-3 rounded-lg bg-blue-900/60 text-white placeholder-blue-300 border border-blue-500/30 focus:ring-2 focus:ring-blue-500 outline-none" />
-            <input type="text" placeholder="Course Title" className="px-4 py-3 rounded-lg bg-blue-900/60 text-white placeholder-blue-300 border border-blue-500/30 focus:ring-2 focus:ring-blue-500 outline-none" />
-            <textarea placeholder="Course Description" className="px-4 py-3 rounded-lg bg-blue-900/60 text-white placeholder-blue-300 border border-blue-500/30 focus:ring-2 focus:ring-blue-500 outline-none resize-none" rows={4} />
-            <button type="submit" className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700">Create Course</button>
-          </form>
-        </div>
-      </div>
-    );
+    setSuccessMessage("");
+    setToast(null);
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("http://localhost:5000/courses/import-playlist", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: courseTitle,
+          description,
+          playlistUrl,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to create course from playlist");
+      }
+
+      setCreatedCourseId(data.courseId);
+      const msg = data.message || "Course created successfully from playlist!";
+      setSuccessMessage(msg);
+      setToast({ message: msg, type: "success" });
+    } catch (err: any) {
+      const msg = err.message || "Something went wrong while importing playlist.";
+      setError(msg);
+      setToast({ message: msg, type: "error" });
+    } finally {
+      setIsLoading(false);
+    }
   }
+
+  return (
+    <main className="min-h-screen bg-gray-50">
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
+      <div className="max-w-3xl mx-auto px-4 py-10">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+            Create Course from YouTube Playlist
+          </h1>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Paste your personal YouTube playlist and we’ll turn it into a structured course
+            you can track and learn from inside your dashboard.
+          </p>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
+          {successMessage ? (
+            <div className="text-center space-y-4">
+              <div className="mx-auto w-14 h-14 rounded-full bg-green-50 flex items-center justify-center">
+                <svg
+                  className="w-8 h-8 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Course Created Successfully!</h3>
-              <p className="text-gray-600 mb-6">
-                Your course "{courseTitle}" has been created from the playlist.
+              <h3 className="text-xl font-semibold text-gray-900">
+                Course Created Successfully!
+              </h3>
+              <p className="text-gray-600">
+                Your course
+                {courseTitle ? ` "${courseTitle}" ` : " "}
+                has been created from your playlist.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button
-                  onClick={handleReset}
-                  className="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700"
+                  onClick={resetForm}
+                  className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Create Another Course
                 </button>
                 <a
                   href="/dashboard"
-                  className="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50"
+                  className="px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Go to Dashboard
                 </a>
+                {createdCourseId && (
+                  <button
+                    onClick={() => router.push(`/course/${createdCourseId}`)}
+                    className="px-6 py-2.5 bg-gray-900 text-white font-medium rounded-lg hover:bg-black transition-colors"
+                  >
+                    View Course
+                  </button>
+                )}
               </div>
             </div>
           ) : (
             <>
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Course Details</h2>
-              
+              <h2 className="text-lg font-semibold text-gray-900 mb-6">
+                Course Details
+              </h2>
+
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* YouTube Playlist URL */}
                 <div>
-                  <label htmlFor="playlistUrl" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="playlistUrl"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     YouTube Playlist URL *
                   </label>
                   <input
@@ -71,12 +158,17 @@ export default function CreateCoursePage() {
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                     required
                   />
-                  <p className="mt-1 text-sm text-gray-500">Public playlists only</p>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Make sure your playlist is set to <span className="font-medium">Public</span>.
+                  </p>
                 </div>
 
                 {/* Course Title */}
                 <div>
-                  <label htmlFor="courseTitle" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="courseTitle"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Course Title *
                   </label>
                   <input
@@ -84,7 +176,7 @@ export default function CreateCoursePage() {
                     type="text"
                     value={courseTitle}
                     onChange={(e) => setCourseTitle(e.target.value)}
-                    placeholder="e.g., Data Structures & Algorithms"
+                    placeholder="e.g., My Web Development Roadmap"
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                     required
                   />
@@ -92,14 +184,17 @@ export default function CreateCoursePage() {
 
                 {/* Description */}
                 <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                    Description (Optional)
+                  <label
+                    htmlFor="description"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Description (optional)
                   </label>
                   <textarea
                     id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Describe what students will learn in this course..."
+                    placeholder="Describe what this playlist-based course is about..."
                     rows={4}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
                   />
@@ -114,16 +209,23 @@ export default function CreateCoursePage() {
 
                 {/* Info Note */}
                 <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-                  <div className="flex items-start">
-                    <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <div className="flex items-start gap-3">
+                    <svg
+                      className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
-                    <div>
-                      <p className="text-sm text-blue-700">
-                        Videos will be imported in the same order as they appear in the playlist.
-                        Please make sure your playlist is public and accessible.
-                      </p>
-                    </div>
+                    <p className="text-sm text-blue-700">
+                      Videos will be imported in the same order as they appear in your YouTube playlist.
+                    </p>
                   </div>
                 </div>
 
@@ -132,15 +234,31 @@ export default function CreateCoursePage() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="flex-1 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="flex-1 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
                   >
                     {isLoading ? (
                       <span className="flex items-center justify-center">
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg
+                          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
                         </svg>
-                        Creating Course...
+                        Creating course...
                       </span>
                     ) : (
                       "Create Course"
@@ -148,7 +266,7 @@ export default function CreateCoursePage() {
                   </button>
                   <a
                     href="/dashboard"
-                    className="flex-1 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 text-center"
+                    className="flex-1 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 text-center transition-colors"
                   >
                     Back to Dashboard
                   </a>
@@ -161,7 +279,8 @@ export default function CreateCoursePage() {
         {/* Help Section */}
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-500">
-            Need help? Ensure your YouTube playlist is set to "Public"
+            Need help? Ensure your YouTube playlist is set to <span className="font-medium">Public</span> and
+            that the URL includes the <code className="px-1 py-0.5 bg-gray-100 rounded text-xs">list=</code> parameter.
           </p>
         </div>
       </div>

@@ -1,20 +1,64 @@
 const pool = require("../config/db");
-const { get } = require("../routes/course.routes");
 const fetchPlaylistVideos = require("../utils/youtube");
-
-
-
-
-
-
-
 async function getAllCourses(req, res) {
   try {
-    const result = await pool.query(
-      "SELECT id, title, description FROM courses ORDER BY created_at DESC"
+    const userId = req.user && req.user.userId;
+
+    // Get all courses with video counts
+    const coursesResult = await pool.query(
+      `SELECT 
+        c.id, 
+        c.title, 
+        c.description,
+        c.created_at,
+        COUNT(DISTINCT v.id) as video_count
+       FROM courses c
+       LEFT JOIN videos v ON v.course_id = c.id
+       GROUP BY c.id, c.title, c.description, c.created_at
+       ORDER BY c.created_at DESC`
     );
 
-    res.json(result.rows);
+    const courses = coursesResult.rows;
+
+    // If user is authenticated, add progress info for each course
+    if (userId) {
+      const coursesWithProgress = await Promise.all(
+        courses.map(async (course) => {
+          // Get total videos
+          const totalVideos = parseInt(course.video_count) || 0;
+
+          // Get completed videos for this user
+          const completedRes = await pool.query(
+            `SELECT COUNT(*) as completed_count
+             FROM user_video_progress
+             WHERE user_id = $1 
+             AND completed = true
+             AND video_id IN (SELECT id FROM videos WHERE course_id = $2)`,
+            [userId, course.id]
+          );
+
+          const completedCount = parseInt(completedRes.rows[0]?.completed_count || 0);
+          const percentage = totalVideos > 0 ? Math.round((completedCount / totalVideos) * 100) : 0;
+
+          return {
+            ...course,
+            video_count: totalVideos,
+            completed_videos: completedCount,
+            progress_percentage: percentage,
+          };
+        })
+      );
+
+      return res.json(coursesWithProgress);
+    }
+
+    // For non-authenticated users, just return courses with video counts
+    const coursesWithCounts = courses.map(course => ({
+      ...course,
+      video_count: parseInt(course.video_count) || 0,
+    }));
+
+    res.json(coursesWithCounts);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -67,32 +111,46 @@ async function getCourseVideos(req, res) {
 
 async function importPlaylist(req, res) {
   try {
-    const { title, description, playlistId } = req.body;
+    const { title, description, playlistId, playlistUrl } = req.body;
+
+    // Derive playlistId if only URL is provided
+    let finalPlaylistId = playlistId;
+    if (!finalPlaylistId && playlistUrl) {
+      finalPlaylistId = extractPlaylistId(playlistUrl);
+    }
 
     //  Validation check 
-    if (!title || !playlistId) {
+    if (!title || !finalPlaylistId) {
       return res.status(400).json({
-        message: "Title and playlistId are required",
+        message: "Title and a valid playlist URL/ID are required",
       });
     }
 
     //  Insert course in db
     const courseResult = await pool.query(
       "INSERT INTO courses (title, description, playlist_id) VALUES ($1, $2, $3) RETURNING id",
-      [title, description || "", playlistId]
+      [title, description || "", finalPlaylistId]
     );
 
     const courseId = courseResult.rows[0].id;
 
-    // Fetch videos from YouTube API
-    const videos = await fetchPlaylistVideos(playlistId);
+    // Create a default module for imported playlists
+    const moduleResult = await pool.query(
+      `INSERT INTO modules (course_id, title, order_index) 
+       VALUES ($1, $2, $3) RETURNING id`,
+      [courseId, "Course Content", 1]
+    );
+    const moduleId = moduleResult.rows[0].id;
 
-    //  Insert videos in db
+    // Fetch videos from YouTube API
+    const videos = await fetchPlaylistVideos(finalPlaylistId);
+
+    //  Insert videos in db with module_id
     for (const video of videos) {
       await pool.query(
-        `INSERT INTO videos (course_id, youtube_video_id, title, position)
-         VALUES ($1, $2, $3, $4)`,
-        [courseId, video.youtube_video_id, video.title, video.position]
+        `INSERT INTO videos (course_id, youtube_video_id, title, position, module_id)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [courseId, video.youtube_video_id, video.title, video.position, moduleId]
       );
     }
 
@@ -161,13 +219,33 @@ async function getCourseContent(req, res) {
       completedVideoIds = completedRes.rows.map(r => r.video_id);
     }
 
-    // 4️⃣ Group videos under modules with completed/unlocked logic
+    // 4️⃣ Handle courses without modules (create virtual default module)
+    if (modules.length === 0 && videos.length > 0) {
+      // Create a virtual module for videos without modules
+      const allVideos = videos.sort((a, b) => a.position - b.position);
+      const structuredContent = [{
+        moduleId: 0, // Virtual module ID
+        title: "Course Content",
+        order: 1,
+        videos: allVideos.map((video, idx) => {
+          const completed = completedVideoIds.includes(video.id);
+          const isUnlocked = idx === 0 || completedVideoIds.includes(allVideos[idx - 1]?.id);
+          return {
+            ...video,
+            completed,
+            unlocked: isUnlocked
+          };
+        })
+      }];
+      return res.json(structuredContent);
+    }
+
+    // 5️⃣ Group videos under modules with completed/unlocked logic
     const structuredContent = modules.map((module) => {
       const moduleVideos = videos
         .filter((video) => video.module_id === module.id)
         .sort((a, b) => a.position - b.position);
 
-      let unlocked = true;
       return {
         moduleId: module.id,
         title: module.title,
@@ -185,6 +263,26 @@ async function getCourseContent(req, res) {
         })
       };
     });
+
+    // 6️⃣ Handle videos without module_id (orphaned videos)
+    const orphanedVideos = videos.filter(v => !v.module_id);
+    if (orphanedVideos.length > 0) {
+      const orphanedModule = {
+        moduleId: 0,
+        title: "Course Content",
+        order: modules.length + 1,
+        videos: orphanedVideos.sort((a, b) => a.position - b.position).map((video, idx) => {
+          const completed = completedVideoIds.includes(video.id);
+          const isUnlocked = idx === 0 || completedVideoIds.includes(orphanedVideos[idx - 1]?.id);
+          return {
+            ...video,
+            completed,
+            unlocked: isUnlocked
+          };
+        })
+      };
+      structuredContent.push(orphanedModule);
+    }
 
     res.json(structuredContent);
   } catch (error) {

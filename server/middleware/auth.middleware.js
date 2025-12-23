@@ -18,4 +18,22 @@ function authMiddleware(req, res, next) {
   }
 }
 
+// Optional auth middleware - doesn't require auth but adds user if available
+function optionalAuthMiddleware(req, res, next) {
+  const bearer = req.headers.authorization?.split(" ")[1];
+  const token = req.cookies?.token || bearer;
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = decoded;
+    } catch (error) {
+      // Invalid token, but continue without user
+      req.user = null;
+    }
+  }
+  next();
+}
+
 module.exports = authMiddleware;
+module.exports.optional = optionalAuthMiddleware;
