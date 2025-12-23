@@ -1,7 +1,8 @@
 "use client";
 
-
 import { useState, useEffect } from "react";
+import Toast, { type ToastType } from "@/components/Toast";
+import { useAuth } from "@/context/AuthContext";
 
 type User = {
   name: string;
@@ -17,6 +18,7 @@ type Stats = {
 };
 
 export default function ProfilePage() {
+  const { logout } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [streak, setStreak] = useState(0);
@@ -25,6 +27,7 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [tempName, setTempName] = useState("");
   const [tempEmail, setTempEmail] = useState("");
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -51,7 +54,7 @@ export default function ProfilePage() {
           accountCreated: userData.created_at,
         } as User);
         setStats({
-          coursesEnrolled: statsData.progress?.totalVideos ? 1 : 0, // Placeholder: 1 if any videos, else 0
+          coursesEnrolled: statsData.coursesEnrolled ?? 0,
           videosCompleted: statsData.progress?.completedVideos || 0,
           currentBadge: statsData.badge || "Bronze",
         } as Stats);
@@ -68,11 +71,40 @@ export default function ProfilePage() {
   }, []);
 
 
-  const handleSaveProfile = () => {
-    // Optionally: send PATCH/PUT to backend to update profile
-    setUser((prev) => prev ? { ...prev, name: tempName, email: tempEmail } : null);
-    setIsEditing(false);
-    alert("Profile updated!");
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    try {
+      const res = await fetch("http://localhost:5000/users/me", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ name: tempName, email: tempEmail }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setToast({ message: (data as any).message || "Failed to update profile", type: "error" });
+        return;
+      }
+
+      const updated = (data as any).user;
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              name: updated?.name ?? tempName,
+              email: updated?.email ?? tempEmail,
+            }
+          : prev
+      );
+      setIsEditing(false);
+      setToast({ message: "Profile updated!", type: "success" });
+    } catch {
+      setToast({ message: "Network error while updating profile.", type: "error" });
+    }
   };
 
   const handleCancelEdit = () => {
@@ -82,13 +114,11 @@ export default function ProfilePage() {
   };
 
   const handleLogout = () => {
-    if (window.confirm("Logout?")) {
-      window.location.href = "/login";
-    }
+    logout();
   };
 
   const handleChangePassword = () => {
-    alert("Password change feature coming soon!");
+    setToast({ message: "Password change feature coming soon!", type: "info" });
   };
 
   const getBadgeColor = (badge: string) => {
@@ -126,6 +156,13 @@ export default function ProfilePage() {
   }
   return (
     <main className="min-h-screen bg-gray-50 p-4 md:p-8">
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
       <div className="max-w-4xl mx-auto">
         {/* Page Header */}
         <div className="mb-6">
