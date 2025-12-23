@@ -2,9 +2,16 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 
 // middleware setup 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
+app.use(cookieParser());
 app.use(express.json());
 
 
@@ -23,6 +30,8 @@ app.use("/users", userRoutes);
 const dashboardRoutes = require("./routes/dashboard.routes");
 app.use("/dashboard", dashboardRoutes);
 
+const progressRoutes = require("./routes/progress.routes");
+app.use("/progress", progressRoutes);
 
 const videoRoutes = require("./routes/video.routes");
 app.use("/videos", videoRoutes);
