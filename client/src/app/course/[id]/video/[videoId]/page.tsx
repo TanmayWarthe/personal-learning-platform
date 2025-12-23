@@ -73,8 +73,26 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
       const modulesRes = await fetch(`http://localhost:5000/courses/${id}/content`, { credentials: "include" });
       const modulesData = await modulesRes.json();
       const allVideos = Array.isArray(modulesData) ? modulesData.flatMap((m) => m.videos) : [];
-      // Find the next video in sequence
-      const next = allVideos[currentVideoIndex + 1];
+
+      // Update local state so UI immediately reflects completion
+      setCourseVideos(allVideos);
+      const vid = Number(videoId);
+      const newIndex = allVideos.findIndex((v) => Number(v.id) === vid);
+      if (newIndex >= 0) {
+        setCurrentVideoIndex(newIndex);
+      }
+
+      // Optionally update parent (course/dashboard) progress if callbacks are provided
+      try {
+        const progressRes = await fetch(`http://localhost:5000/courses/${id}/progress`, { credentials: "include" });
+        const progressData = await progressRes.json();
+        onProgressUpdate?.(progressData);
+      } catch {
+        // ignore progress update errors in child UI
+      }
+
+      // Find the next video in sequence using updated list
+      const next = allVideos[newIndex + 1];
       if (next) {
         router.push(`/course/${id}/video/${next.id}`);
       } else {
