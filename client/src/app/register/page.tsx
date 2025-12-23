@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Toast, { type ToastType } from "@/components/Toast";
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState("");
@@ -10,6 +11,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
   const router = useRouter();
 
@@ -45,24 +47,35 @@ export default function RegisterPage() {
         }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setError(data.message || "Registration failed");
-        setIsLoading(false);
+        setError((data as any).message || "Registration failed");
         return;
       }
       // Token is now set by backend in HTTP-only cookie
-      router.push("/dashboard");
+      setToast({ message: "Congratulations! Your account has been created.", type: "success" });
+      // Give user a moment to read the toast before redirecting
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1500);
 
-    } catch (err) {
+    } catch {
       setError("Network error. Please try again.");
+    } finally {
       setIsLoading(false);
     }
   }
 
   return (
     <main className="vh-screen flex items-center justify-center bg-gray-50 px-4 py-8">
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
       <div className="w-full max-w-sm mx-auto">
         {/* Logo Section */}
         <div className="text-center mb-6">
