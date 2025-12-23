@@ -35,6 +35,16 @@ exports.getDashboardSummary = async (req, res) => {
     else if (progressPercent > 40) badge = "Gold";
     else if (progressPercent > 20) badge = "Silver";
 
+    /* ================= COURSES ENROLLED ================= */
+    const enrolledCoursesResult = await pool.query(
+      `SELECT COUNT(DISTINCT v.course_id) AS count
+       FROM user_video_progress uvp
+       JOIN videos v ON v.id = uvp.video_id
+       WHERE uvp.user_id = $1`,
+      [userId]
+    );
+    const coursesEnrolled = Number(enrolledCoursesResult.rows[0]?.count || 0);
+
     /* ================= CONTINUE LEARNING ================= */
     const continueResult = await pool.query(
       `
@@ -64,6 +74,7 @@ exports.getDashboardSummary = async (req, res) => {
         percentage: progressPercent,
       },
       badge,
+      coursesEnrolled,
       continueLearning,
     });
   } catch (error) {
@@ -76,11 +87,49 @@ exports.getDashboardSummary = async (req, res) => {
 };
 
 // GET /progress/streak
-exports.getStreak = async (_req, res) => {
+// Returns the user's current learning streak in days based on consecutive days
+// where at least one video was completed.
+exports.getStreak = async (req, res) => {
   try {
-    // Replace with real streak logic when available
-    res.json({ streak: 5 });
-  } catch {
+    const userId = req.user.userId;
+
+    // Get distinct completion dates for this user, most recent first
+    const result = await pool.query(
+      `SELECT DISTINCT DATE(completed_at) AS day
+       FROM user_video_progress
+       WHERE user_id = $1
+         AND completed = true
+         AND completed_at IS NOT NULL
+       ORDER BY day DESC`,
+      [userId]
+    );
+
+    const days = result.rows.map((r) => r.day);
+    if (days.length === 0) {
+      return res.json({ streak: 0 });
+    }
+
+    // Compute streak as number of consecutive days from the most recent activity
+    let streak = 1;
+    for (let i = 1; i < days.length; i++) {
+      const prev = new Date(days[i - 1]);
+      const curr = new Date(days[i]);
+      const diffInMs = prev.getTime() - curr.getTime();
+      const diffInDays = Math.round(diffInMs / (1000 * 60 * 60 * 24));
+
+      if (diffInDays === 1) {
+        streak += 1;
+      } else if (diffInDays === 0) {
+        // Same calendar day (shouldn't happen with DISTINCT, but just in case)
+        continue;
+      } else {
+        break;
+      }
+    }
+
+    res.json({ streak });
+  } catch (error) {
+    console.error("Streak calculation error:", error);
     res.json({ streak: 0 });
   }
 };
