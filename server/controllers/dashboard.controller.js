@@ -74,3 +74,13 @@ exports.getDashboardSummary = async (req, res) => {
     });
   }
 };
+
+// GET /progress/streak
+exports.getStreak = async (_req, res) => {
+  try {
+    // Replace with real streak logic when available
+    res.json({ streak: 5 });
+  } catch {
+    res.json({ streak: 0 });
+  }
+};

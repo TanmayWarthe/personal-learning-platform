@@ -3,8 +3,9 @@ const router = express.Router();
 const authMiddleware = require("../middleware/auth.middleware");
 const { markVideoCompleted } = require("../controllers/video.controller");
 
+// Mounted at /videos in server/index.js, so route path should be "/:videoId/complete"
 router.post(
-  "/videos/:videoId/complete",
+  "/:videoId/complete",
   authMiddleware,
   markVideoCompleted
 );
