@@ -2,39 +2,60 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Toast, { type ToastType } from "@/components/Toast";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
   const router = useRouter();
   
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
 
-    const res = await fetch("http://localhost:5000/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      const res = await fetch("http://localhost:5000/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
 
-    const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
-    if (!res.ok) {
-      setError(data.message || "Login failed");
-      return;
+      if (!res.ok) {
+        setError(data.message || "Login failed");
+        return;
+      }
+      // Token is now set by backend in HTTP-only cookie
+      setToast({ message: "Welcome back! You are logged in.", type: "success" });
+      // Small delay so user can see the toast before redirect
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1500);
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
-    // Token is now set by backend in HTTP-only cookie
-    router.push("/dashboard");
   }
 
   return (
     <main className="vh-screen mt-16 flex items-center justify-center bg-gray-50">
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
       <div className="w-full max-w-md">
         {/* Logo Section */}
         <div className="text-center mb-8">
@@ -121,9 +142,10 @@ export default function LoginPage() {
             {/* Login Button */}
             <button
               type="submit"
-              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              disabled={isLoading}
+              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed text-white font-medium rounded-lg shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              Sign in
+              {isLoading ? "Signing in..." : "Sign in"}
             </button>
 
             {/* Registration Link */}
