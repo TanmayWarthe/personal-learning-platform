@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Toast, { type ToastType } from "@/components/Toast";
 
 type Video = {
   id: number;
@@ -32,6 +33,7 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
   const [courseVideos, setCourseVideos] = useState<CourseVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
   /* ================= FETCH VIDEOS & COMPLETED STATUS ================= */
   useEffect(() => {
@@ -66,7 +68,7 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
         credentials: "include"
       });
       if (!res.ok) {
-        alert("Failed to mark complete");
+        setToast({ message: "Failed to mark lesson as complete.", type: "error" });
         return;
       }
       // Refetch course content to get updated unlock/completion status
@@ -81,6 +83,8 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
       if (newIndex >= 0) {
         setCurrentVideoIndex(newIndex);
       }
+      // Show a quick success toast so the button feels responsive
+      setToast({ message: "Lesson marked as completed!", type: "success" });
 
       // Optionally update parent (course/dashboard) progress if callbacks are provided
       try {
@@ -93,13 +97,17 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
 
       // Find the next video in sequence using updated list
       const next = allVideos[newIndex + 1];
-      if (next) {
-        router.push(`/course/${id}/video/${next.id}`);
-      } else {
-        router.push(`/course/${id}`);
-      }
+
+      // Navigate a bit later so the user can see the toast and button state
+      setTimeout(() => {
+        if (next) {
+          router.push(`/course/${id}/video/${next.id}`);
+        } else {
+          router.push(`/course/${id}`);
+        }
+      }, 1500);
     } catch (err) {
-      alert("Network error");
+      setToast({ message: "Network error while updating lesson.", type: "error" });
     }
   }
 
@@ -128,6 +136,13 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
 
   return (
     <main className="min-h-screen bg-gray-50">
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
       {/* Top Navigation */}
       <nav className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 py-4">
