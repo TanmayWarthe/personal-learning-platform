@@ -230,28 +230,6 @@ export default function CreateCoursePage() {
                   </div>
                 )}
 
-                {/* Info Note */}
-                <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-                  <div className="flex items-start gap-3">
-                    <svg
-                      className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <p className="text-sm text-blue-700">
-                      Videos will be imported in the same order as they appear in your YouTube playlist.
-                    </p>
-                  </div>
-                </div>
-
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 pt-4">
                   <button
@@ -299,13 +277,7 @@ export default function CreateCoursePage() {
           )}
         </div>
 
-        {/* Help Section */}
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-500">
-            Need help? Ensure your YouTube playlist is set to <span className="font-medium">Public</span> and
-            that the URL includes the <code className="px-1 py-0.5 bg-gray-100 rounded text-xs">list=</code> parameter.
-          </p>
-        </div>
+        
       </div>
     </main>
   );
