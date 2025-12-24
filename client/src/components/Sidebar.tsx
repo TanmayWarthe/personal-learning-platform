@@ -1,6 +1,18 @@
 "use client";
+// SidebarLink component for navigation links
+function SidebarLink({ href, label, pathname }: { href: string; label: string; pathname: string }) {
+  const isActive = pathname === href;
+  return (
+    <Link
+      href={href}
+      className={`block px-4 py-2 rounded-lg font-medium transition-colors ${isActive ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-50"}`}
+    >
+      {label}
+    </Link>
+  );
+}
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -66,28 +78,4 @@ export default function Sidebar() {
   );
 }
 
-function SidebarLink({
-  href,
-  label,
-  pathname,
-}: {
-  href: string;
-  label: string;
-  pathname: string;
-}) {
-  const active = pathname === href || pathname.startsWith(`${href}/`);
-
-  return (
-    <Link
-      href={href}
-      className={`block rounded-2xl px-4 py-2.5 text-sm transition ${
-        active
-          ? "bg-white text-purple-600 font-semibold shadow-md"
-          : "text-gray-700 hover:bg-white hover:text-purple-600 hover:shadow-md"
-      }`}
-    >
-      {label}
-    </Link>
-  );
-}
 

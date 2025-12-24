@@ -301,7 +301,7 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
                     <div 
-                      className="bg-gradient-to-r from-blue-500 to-blue-600 h-2.5 rounded-full transition-all duration-500"
+                      className="bg-linear-to-r from-blue-500 to-blue-600 h-2.5 rounded-full transition-all duration-500"
                       style={{ 
                         width: `${(courseVideos.filter(v => v.completed).length / courseVideos.length) * 100}%` 
                       }}
@@ -444,7 +444,7 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
             )}
             <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
               {/* Video Title */}
-              <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+              <div className="p-6 border-b border-gray-200 bg-linear-to-r from-gray-50 to-white">
                 <div className="flex items-start justify-between gap-4 mb-2">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
@@ -476,7 +476,7 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
               </div>
 
               {/* Custom Video Player */}
-              <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-black">
+              <div className="relative bg-linear-to-br from-gray-900 via-gray-800 to-black">
                 {/* Custom Player Container */}
                 <div className="relative aspect-video bg-black group overflow-hidden">
                   {/* Thumbnail Background (fallback) */}
@@ -519,7 +519,7 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
               </div>
 
               {/* Quick Actions */}
-              <div className="p-6 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+              <div className="p-6 border-t border-gray-200 bg-linear-to-r from-gray-50 to-white">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="flex items-center gap-3 flex-wrap">
                     <button
