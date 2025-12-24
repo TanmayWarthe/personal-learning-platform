@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Toast, { type ToastType } from "@/components/Toast";
+import { apiFetch } from "@/lib/api";
 
 type Course = {
   id: number;
@@ -43,9 +44,7 @@ export default function CoursesPage() {
       try {
         setLoading(true);
         setError("");
-        const res = await fetch("http://localhost:5000/courses", {
-          credentials: "include", // Include cookies for auth
-        });
+        const res = await apiFetch("/courses");
         
         if (!res.ok) {
           throw new Error("Failed to fetch courses");

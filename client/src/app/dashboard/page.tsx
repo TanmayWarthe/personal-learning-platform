@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Toast, { type ToastType } from "@/components/Toast";
+import { apiFetch } from "@/lib/api";
 
 type Course = {
   id: string;
@@ -57,7 +58,7 @@ export default function DashboardPage() {
         setUserName(user.name || "");
 
         // Dashboard summary (progress, badge, continueLearning)
-        const dashRes = await fetch("http://localhost:5000/dashboard/summary", { credentials: "include" });
+        const dashRes = await apiFetch("/dashboard/summary");
         if (!dashRes.ok) throw new Error("Failed to fetch dashboard");
         const dashData = await dashRes.json();
         setProgress(dashData.progress?.percentage || 0);
@@ -67,14 +68,14 @@ export default function DashboardPage() {
         setContinueLearning(dashData.continueLearning);
 
         // Learning streak
-        const streakRes = await fetch("http://localhost:5000/progress/streak", { credentials: "include" });
+        const streakRes = await apiFetch("/progress/streak");
         if (streakRes.ok) {
           const streakData = await streakRes.json();
           setStreak(streakData.streak || 0);
         }
 
         // Fetch all courses (for "Your Courses" section)
-        const coursesRes = await fetch("http://localhost:5000/courses", { credentials: "include" });
+        const coursesRes = await apiFetch("/courses");
         if (coursesRes.ok) {
           const coursesData = await coursesRes.json();
           setCourses(coursesData);

@@ -4,6 +4,7 @@ import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Toast, { type ToastType } from "@/components/Toast";
+import { apiFetch } from "@/lib/api";
 
 type Course = {
   id: number;
@@ -62,17 +63,12 @@ export default function CoursePage({
   async function refetchCourseData() {
     try {
       // Fetch course info
-      const courseRes = await fetch(
-        `http://localhost:5000/courses/${courseId}`
-      );
+      const courseRes = await apiFetch(`/courses/${courseId}`);
       const courseData = await courseRes.json();
       setCourse(courseData);
 
       // Fetch modules with videos (with completed/unlocked from backend)
-      const modulesRes = await fetch(
-        `http://localhost:5000/courses/${courseId}/content`,
-        { credentials: "include" }
-      );
+      const modulesRes = await apiFetch(`/courses/${courseId}/content`);
       const modulesData = await modulesRes.json();
       const safeModules = Array.isArray(modulesData) ? modulesData : [];
       setModules(safeModules);
@@ -87,10 +83,7 @@ export default function CoursePage({
       setVideos(allVideos);
 
       // Fetch progress (completed/total/progress%)
-      const progressRes = await fetch(
-        `http://localhost:5000/courses/${courseId}/progress`,
-        { credentials: "include" }
-      );
+      const progressRes = await apiFetch(`/courses/${courseId}/progress`);
       const progressData = await progressRes.json();
       setProgress(progressData.percentage || 0);
       setCompletedCount(progressData.completedVideos || 0);

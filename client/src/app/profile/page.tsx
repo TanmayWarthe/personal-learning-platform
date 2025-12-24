@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Toast, { type ToastType } from "@/components/Toast";
 import { useAuth } from "@/context/AuthContext";
+import { apiFetch } from "@/lib/api";
 
 type User = {
   name: string;
@@ -50,16 +51,16 @@ export default function ProfilePage() {
       setError("");
       try {
         // Fetch user info
-        const userRes = await fetch("http://localhost:5000/users/me", { credentials: "include" });
+        const userRes = await apiFetch("/users/me");
         if (!userRes.ok) throw new Error("Not authenticated");
         const userData = await userRes.json();
 
         // Fetch stats
-        const statsRes = await fetch("http://localhost:5000/dashboard/summary", { credentials: "include" });
+        const statsRes = await apiFetch("/dashboard/summary");
         const statsData = await statsRes.json();
 
         // Fetch streak
-        const streakRes = await fetch("http://localhost:5000/progress/streak", { credentials: "include" });
+        const streakRes = await apiFetch("/progress/streak");
         const streakData = await streakRes.json();
 
         setUser({
@@ -89,12 +90,8 @@ export default function ProfilePage() {
   const handleSaveProfile = async () => {
     if (!user) return;
     try {
-      const res = await fetch("http://localhost:5000/users/me", {
+      const res = await apiFetch("/users/me", {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
         body: JSON.stringify({ name: tempName, email: tempEmail }),
       });
 

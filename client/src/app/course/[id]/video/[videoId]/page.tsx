@@ -4,6 +4,7 @@ import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Toast, { type ToastType } from "@/components/Toast";
 import { useAuth } from "@/context/AuthContext";
+import { apiFetch } from "@/lib/api";
 
 type Video = {
   id: number;
@@ -64,7 +65,7 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
     async function fetchData() {
       try {
         // Fetch course content (with completed/unlocked from backend)
-        const modulesRes = await fetch(`http://localhost:5000/courses/${id}/content`, { credentials: "include" });
+        const modulesRes = await apiFetch(`/courses/${id}/content`);
         const modulesData = await modulesRes.json();
         const allVideos = Array.isArray(modulesData) ? modulesData.flatMap((m) => m.videos) : [];
         setCourseVideos(allVideos);
@@ -87,16 +88,15 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
   async function handleMarkCompleted() {
     if (!video) return;
     try {
-      const res = await fetch(`http://localhost:5000/videos/${video.id}/complete`, {
+      const res = await apiFetch(`/videos/${video.id}/complete`, {
         method: "POST",
-        credentials: "include"
       });
       if (!res.ok) {
         setToast({ message: "Failed to mark lesson as complete.", type: "error" });
         return;
       }
       // Refetch course content to get updated unlock/completion status
-      const modulesRes = await fetch(`http://localhost:5000/courses/${id}/content`, { credentials: "include" });
+      const modulesRes = await apiFetch(`/courses/${id}/content`);
       const modulesData = await modulesRes.json();
       const allVideos = Array.isArray(modulesData) ? modulesData.flatMap((m) => m.videos) : [];
 
@@ -112,7 +112,7 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
 
       // Optionally update parent (course/dashboard) progress if callbacks are provided
       try {
-        const progressRes = await fetch(`http://localhost:5000/courses/${id}/progress`, { credentials: "include" });
+        const progressRes = await apiFetch(`/courses/${id}/progress`);
         const progressData = await progressRes.json();
         onProgressUpdate?.(progressData);
       } catch {

@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { apiFetch } from "@/lib/api";
 
 type User = {
   id: number;
@@ -24,9 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUser = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5000/users/me", {
-        credentials: "include"
-      });
+      const res = await apiFetch("/users/me");
       if (!res.ok) throw new Error("Invalid token");
       const data = await res.json();
       setUser(data);
@@ -45,9 +44,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     function logout() {
     // Call backend logout endpoint to clear cookie
-    fetch("http://localhost:5000/auth/logout", {
+    apiFetch("/auth/logout", {
       method: "POST",
-      credentials: "include"
     }).finally(() => {
       setUser(null);
       window.location.href = "/login";

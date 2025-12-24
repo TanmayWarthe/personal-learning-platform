@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Toast, { type ToastType } from "@/components/Toast";
 import { useAuth } from "@/context/AuthContext";
+import { apiFetch } from "@/lib/api";
 
 export default function RegisterPage() {
   const { user, loading: authLoading, refreshUser } = useAuth();
@@ -45,12 +46,8 @@ export default function RegisterPage() {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/auth/register", {
+      const res = await apiFetch("/auth/register", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
         body: JSON.stringify({ 
           name: fullName, 
           email, 

@@ -44,11 +44,8 @@ export default function CreateCoursePage() {
     setIsLoading(true);
 
     try {
-      const res = await fetch("http://localhost:5000/courses/import-playlist", {
+      const res = await apiFetch("/courses/import-playlist", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({
           title: courseTitle,
           description,
