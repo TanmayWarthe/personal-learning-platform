@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Toast, { ToastType } from "@/components/Toast";
 import { useAuth } from "@/context/AuthContext";
 
+// import apiFetch from "@/utils/apiFetch";
 export default function CreateCoursePage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -44,7 +45,7 @@ export default function CreateCoursePage() {
     setIsLoading(true);
 
     try {
-      const res = await apiFetch("/courses/import-playlist", {
+      const res = await fetch("/courses/import-playlist", {
         method: "POST",
         body: JSON.stringify({
           title: courseTitle,

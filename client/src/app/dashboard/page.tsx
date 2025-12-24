@@ -55,7 +55,7 @@ export default function DashboardPage() {
       setError("");
       try {
         // Set user name from auth context
-        setUserName(user.name || "");
+        setUserName(user?.name || "");
 
         // Dashboard summary (progress, badge, continueLearning)
         const dashRes = await apiFetch("/dashboard/summary");
