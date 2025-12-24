@@ -45,21 +45,23 @@ export default function Sidebar() {
         </nav>
       </div>
 
-      <div className="mt-auto px-6 pb-6">
-        <button
-          onClick={() => {
-            logout();
-            router.push("/login");
-          }}
-          className="w-full flex items-center gap-3 px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M7 4h6a2 2 0 012 2v2m0 8v2a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2h6" />
-          </svg>
-          <span className="font-medium">Log Out</span>
-        </button>
-      </div>
+      {isAuthed && (
+        <div className="mt-auto px-6 pb-6">
+          <button
+            onClick={() => {
+              logout();
+              router.push("/login");
+            }}
+            className="w-full flex items-center gap-3 px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7 4h6a2 2 0 012 2v2m0 8v2a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2h6" />
+            </svg>
+            <span className="font-medium">Log Out</span>
+          </button>
+        </div>
+      )}
     </aside>
   );
 }
