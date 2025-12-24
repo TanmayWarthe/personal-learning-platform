@@ -43,7 +43,7 @@ async function registerUser(req, res) {
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // THIS IS KEY
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -101,7 +101,7 @@ async function loginUser(req, res) {
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // THIS IS KEY
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -121,7 +121,7 @@ function logoutUser(req, res) {
   res.clearCookie("token", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   });
 
   res.status(200).json({
