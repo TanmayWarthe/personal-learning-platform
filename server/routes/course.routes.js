@@ -1,17 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const authMiddleware = require("../middleware/auth.middleware");
+const courseController = require("../controllers/course.controller");
 
-const {
-  getAllCourses,
-  getCourseById,
-  getCourseVideos,
-  importPlaylist,
-  getCourseContent,
-  getCourseProgress,
-} = require("../controllers/course.controller");
-
-router.post("/import-playlist", authMiddleware, importPlaylist);
+router.post("/import-playlist", courseController.importPlaylist);
 
 // Public course listing/details (with optional auth for progress)
 router.get("/", authMiddleware.optional, getAllCourses);
@@ -23,4 +14,3 @@ router.get("/:courseId/content", authMiddleware, getCourseContent);
 router.get("/:courseId/progress", authMiddleware, getCourseProgress);
 
 module.exports = router;
-  

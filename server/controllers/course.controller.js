@@ -332,3 +332,16 @@ module.exports = {
   getCourseContent,
   getCourseProgress, // <-- this must be present and spelled the same!
 };
+
+exports.importPlaylist = async (req, res) => {
+  try {
+    // Your logic to import playlist from req.body
+    // Example:
+    // const { playlistUrl, title, description } = req.body;
+    // Do something with the playlist...
+
+    res.status(200).json({ message: 'Playlist imported successfully!' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to import playlist.' });
+  }
+};
