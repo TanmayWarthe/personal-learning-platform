@@ -3,6 +3,10 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const initializeDatabase = require("./utils/initDatabase");
+
+// Initialize database tables on startup
+initializeDatabase();
 
 // middleware setup 
 const allowedOrigins = [
