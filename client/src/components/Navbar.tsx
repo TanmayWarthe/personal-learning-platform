@@ -5,7 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
-export default function Navbar() {
+export default function Navbar({ 
+  onToggleSidebar, 
+  sidebarOpen 
+}: { 
+  onToggleSidebar: () => void; 
+  sidebarOpen: boolean;
+}) {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
 
@@ -39,42 +45,38 @@ export default function Navbar() {
 
   return (
     <nav className="w-full bg-white/90 backdrop-blur border-b border-gray-200 sticky top-0 z-40 shadow-sm">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-full mx-auto px-4">
         <div className="flex items-center h-16 w-full">
-          {/* Logo */}
+          {/* Sidebar Toggle Button */}
+          <button
+            onClick={onToggleSidebar}
+            className="hidden md:flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 transition mr-3"
+            aria-label="Toggle sidebar"
+          >
+            <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+
+          {/* Logo (Mobile) */}
           <Link
             href={user ? "/dashboard" : "/"}
-            className="flex items-center gap-3 group pl-4 sm:pl-8 pr-12"
-            style={{ minWidth: "220px" }}
+            className="flex items-center gap-2 md:hidden"
           >
-            <div className="w-10 h-10 rounded-xl bg-linear-to-br from-blue-600 to-indigo-500 flex items-center justify-center shadow-md">
-              <span className="text-white text-lg font-bold tracking-wide">
-                PL
-              </span>
-            </div>
-            <div className="hidden sm:flex flex-col ml-2">
-              <span className="text-base font-semibold text-blue-700 group-hover:text-indigo-600 transition">
-                Personal Learning
-              </span>
-              <span className="text-xs text-gray-400">
-                Build your own path
-              </span>
+            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
+              <span className="text-white text-sm font-bold">PL</span>
             </div>
           </Link>
 
           {/* Desktop Right Section */}
-          <div className="flex-1 flex justify-end items-center">
+          <div className="flex-1 flex justify-end items-center gap-3">
             {user ? (
-              <div className="hidden md:flex items-center gap-12">
-                <NavLink href="/dashboard" label="Dashboard" />
-                <NavLink href="/courses" label="Courses" />
-                <NavLink href="/import-playlist" label="Add Playlist" />
-
+              <div className="hidden md:flex items-center gap-4">
                 {/* Profile Dropdown */}
-                <div className="relative ml-4" ref={dropdownRef}>
+                <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setOpen(!open)}
-                    className="w-10 h-10 rounded-full bg-linear-to-br from-blue-600 to-indigo-500 text-white font-bold flex items-center justify-center shadow-md border-2 border-white hover:scale-105 transition-transform"
+                    className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-500 text-white font-bold flex items-center justify-center shadow-md border-2 border-white hover:scale-105 transition-transform"
                     aria-label="Open profile menu"
                   >
                     {userInitial}
@@ -113,27 +115,16 @@ export default function Navbar() {
                   )}
                 </div>
               </div>
-            ) : (
-              <div className="hidden md:flex items-center gap-3">
-                <NavLink href="/" label="Home" />
-                <NavLink href="/login" label="Login" />
-                <Link
-                  href="/register"
-                  className="px-4 py-2 bg-linear-to-br from-blue-600 to-indigo-500 text-white rounded-lg font-semibold shadow hover:from-blue-700 hover:to-indigo-600 transition"
-                >
-                  Sign Up
-                </Link>
-              </div>
-            )}
+            ) : null}
 
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ml-2"
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               aria-label="Open mobile menu"
             >
               <svg
-                className="w-7 h-7 text-blue-600"
+                className="w-6 h-6 text-blue-600"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
@@ -168,8 +159,6 @@ export default function Navbar() {
             ) : (
               <>
                 <NavLink href="/" label="Home" mobile />
-                <NavLink href="/login" label="Login" mobile />
-                <NavLink href="/register" label="Sign Up" mobile />
               </>
             )}
           </div>

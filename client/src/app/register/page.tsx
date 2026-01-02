@@ -1,153 +1,25 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import Toast, { type ToastType } from "@/components/Toast";
-import { useAuth } from "@/context/AuthContext";
-import { apiFetch } from "@/lib/api";
+import { useEffect } from "react";
 
 export default function RegisterPage() {
-  const { user, loading: authLoading, refreshUser } = useAuth();
   const router = useRouter();
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
-  // Redirect to dashboard if already logged in
   useEffect(() => {
-    if (!authLoading && user) {
-      setToast({ message: "You are already logged in. Redirecting to dashboard...", type: "info" });
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 1500);
-    }
-  }, [user, authLoading, router]);
-
-  async function handleRegister(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setIsLoading(true);
-
-    // Basic validation
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      setIsLoading(false);
-      return;
-    }
-
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters");
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      const res = await apiFetch("/auth/register", {
-        method: "POST",
-        body: JSON.stringify({ 
-          name: fullName, 
-          email, 
-          password 
-        }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        setError((data as any).message || "Registration failed");
-        setIsLoading(false);
-        return;
-      }
-      // Token is now set by backend in HTTP-only cookie
-      // Refresh user data in AuthContext
-      await refreshUser();
-      setToast({ message: "Congratulations! Your account has been created.", type: "success" });
-      // Give user a moment to read the toast before redirecting
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 1500);
-
-    } catch {
-      setError("Network error. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  // Show loading while checking authentication
-  if (authLoading) {
-    return (
-      <main className="vh-screen mt-16 flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </main>
-    );
-  }
+    // Redirect to homepage where register modal can be opened
+    router.replace("/");
+  }, [router]);
 
   return (
-    <main className="vh-screen flex items-center justify-center bg-gray-50 px-4 py-8">
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
-      <div className="w-full max-w-sm mx-auto">
-        {/* Logo Section */}
-        <div className="text-center mb-6">
-
-          <h1 className="text-xl font-bold text-gray-900">Personal Learning Platform</h1>
-          <p className="text-gray-600 mt-1 text-xs">Start your programming journey today</p>
-        </div>
-
-        {/* Registration Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Create your account</h2>
-          
-          <form onSubmit={handleRegister} className="space-y-4">
-            {/* Full Name Input */}
-            <div>
-              <label htmlFor="fullName" className="block text-xs font-medium text-gray-700 mb-1">
-                Full Name
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-                <input
-                  id="fullName"
-                  name="fullName"
-                  type="text"
-                  required
-                  className="block w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors text-gray-900 placeholder-gray-400"
-                  placeholder="Tanmay Warthe"
-                  onChange={(e) => setFullName(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Email Input */}
-            <div>
-              <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">
-                Email address
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <input
-                  id="email"
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></div>
+        <p className="text-gray-600">Redirecting...</p>
+      </div>
+    </div>
+  );
+}
                   name="email"
                   type="email"
                   autoComplete="email"
