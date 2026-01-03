@@ -113,11 +113,15 @@ async function importPlaylist(req, res) {
   try {
     const { title, description, playlistId, playlistUrl } = req.body;
 
+    console.log("Import playlist request:", { title, playlistId, playlistUrl });
+
     // Derive playlistId if only URL is provided
     let finalPlaylistId = playlistId;
     if (!finalPlaylistId && playlistUrl) {
       finalPlaylistId = extractPlaylistId(playlistUrl);
     }
+
+    console.log("Extracted playlistId:", finalPlaylistId);
 
     //  Validation check 
     if (!title || !finalPlaylistId) {
@@ -126,6 +130,16 @@ async function importPlaylist(req, res) {
       });
     }
 
+    // Check for YouTube API key
+    if (!process.env.YOUTUBE_API_KEY) {
+      console.error("YOUTUBE_API_KEY is not configured");
+      return res.status(500).json({
+        message: "YouTube API key is not configured on the server",
+      });
+    }
+
+    console.log("Inserting course into database...");
+
     //  Insert course in db
     const courseResult = await pool.query(
       "INSERT INTO courses (title, description, playlist_id) VALUES ($1, $2, $3) RETURNING id",
@@ -133,6 +147,7 @@ async function importPlaylist(req, res) {
     );
 
     const courseId = courseResult.rows[0].id;
+    console.log("Course created with ID:", courseId);
 
     // Create a default module for imported playlists
     const moduleResult = await pool.query(
@@ -141,9 +156,12 @@ async function importPlaylist(req, res) {
       [courseId, "Course Content", 1]
     );
     const moduleId = moduleResult.rows[0].id;
+    console.log("Module created with ID:", moduleId);
 
+    console.log("Fetching videos from YouTube API...");
     // Fetch videos from YouTube API
     const videos = await fetchPlaylistVideos(finalPlaylistId);
+    console.log(`Fetched ${videos.length} videos from YouTube`);
 
     //  Insert videos in db with module_id
     for (const video of videos) {
@@ -154,6 +172,8 @@ async function importPlaylist(req, res) {
       );
     }
 
+    console.log("All videos inserted successfully");
+
     // Success
     res.status(201).json({
       message: "Course imported successfully",
@@ -161,7 +181,11 @@ async function importPlaylist(req, res) {
       totalVideos: videos.length,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Import playlist error:", error);
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+    });
     res.status(500).json({
       message: error.message || "Failed to import playlist",
     });
