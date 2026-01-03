@@ -37,6 +37,27 @@ app.use(
 app.use(cookieParser());
 app.use(express.json());
 
+// Health check endpoint
+app.get('/health', async (req, res) => {
+  try {
+    const pool = require('./config/db');
+    await pool.query('SELECT 1');
+    res.json({
+      status: 'ok',
+      database: 'connected',
+      jwt_secret: process.env.JWT_SECRET ? 'configured' : 'missing',
+      node_env: process.env.NODE_ENV,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      database: 'disconnected',
+      error: error.message
+    });
+  }
+});
+
 
 // routes setup 
 

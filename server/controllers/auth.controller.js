@@ -7,12 +7,22 @@ async function registerUser(req, res) {
   try {
     const { name, email, password } = req.body;
 
+    // Validate input
     if (!name || !email || !password) {
       return res.status(400).json({
         message: "All fields are required",
       });
     }
 
+    // Check for JWT_SECRET
+    if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET is not defined in environment variables");
+      return res.status(500).json({
+        message: "Server configuration error",
+      });
+    }
+
+    // Check if user exists
     const existingUser = await pool.query(
       "SELECT id FROM users WHERE email = $1",
       [email]
@@ -24,13 +34,16 @@ async function registerUser(req, res) {
       });
     }
 
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Insert new user
     const newUser = await pool.query(
       "INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, email",
       [name, email, hashedPassword]
     );
 
+    // Generate JWT token
     const token = jwt.sign(
       {
         userId: newUser.rows[0].id,
@@ -40,10 +53,11 @@ async function registerUser(req, res) {
       { expiresIn: "1d" }
     );
 
+    // Set cookie
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // THIS IS KEY
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -51,9 +65,16 @@ async function registerUser(req, res) {
       message: "User registered successfully",
     });
   } catch (error) {
-    console.error(error);
+    console.error("Registration error:", error);
+    console.error("Error details:", {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      stack: error.stack
+    });
     res.status(500).json({
       message: "Server error",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined
     });
   }
 }
