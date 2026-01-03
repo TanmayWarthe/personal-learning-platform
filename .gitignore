@@ -66,5 +66,3 @@ MIGRATE_DATABASE.md
 RENDER_DEPLOY.md
 RENDER_ENV_VARIABLES.txt
 
-server/utils/initDatabase.js
-TROUBLESHOOTING.md
