@@ -151,7 +151,7 @@ async function importPlaylist(req, res) {
 
     // Create a default module for imported playlists
     const moduleResult = await pool.query(
-      `INSERT INTO modules (course_id, title, order_index) 
+      `INSERT INTO modules (course_id, title, position) 
        VALUES ($1, $2, $3) RETURNING id`,
       [courseId, "Course Content", 1]
     );
@@ -221,7 +221,7 @@ async function getCourseContent(req, res) {
 
     // 1️⃣ Get modules
     const modulesResult = await pool.query(
-      `SELECT id, title, order_index FROM modules WHERE course_id = $1 ORDER BY order_index ASC`,
+      `SELECT id, title, position FROM modules WHERE course_id = $1 ORDER BY position ASC`,
       [courseId]
     );
     const modules = modulesResult.rows;
@@ -273,7 +273,7 @@ async function getCourseContent(req, res) {
       return {
         moduleId: module.id,
         title: module.title,
-        order: module.order_index,
+        order: module.position,
         videos: moduleVideos.map((video, idx) => {
           const completed = completedVideoIds.includes(video.id);
           let isUnlocked = false;
