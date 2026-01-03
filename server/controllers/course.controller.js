@@ -348,6 +348,39 @@ async function getCourseProgress(req, res) {
 }
 
 
+async function deleteCourse(req, res) {
+  try {
+    const { courseId } = req.params;
+    const userId = req.user && req.user.userId;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    console.log(`User ${userId} attempting to delete course ${courseId}`);
+
+    // Check if course exists
+    const courseCheck = await pool.query(
+      "SELECT id FROM courses WHERE id = $1",
+      [courseId]
+    );
+
+    if (courseCheck.rows.length === 0) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    // Delete course (CASCADE will handle modules, videos, and progress)
+    await pool.query("DELETE FROM courses WHERE id = $1", [courseId]);
+
+    console.log(`Course ${courseId} deleted successfully`);
+
+    res.json({ message: "Course deleted successfully" });
+  } catch (error) {
+    console.error("Delete course error:", error);
+    res.status(500).json({ message: "Failed to delete course" });
+  }
+}
+
 module.exports = {
   getAllCourses,
   getCourseById,
@@ -355,4 +388,5 @@ module.exports = {
   importPlaylist,
   getCourseContent,
   getCourseProgress,
+  deleteCourse,
 };

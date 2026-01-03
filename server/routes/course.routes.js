@@ -15,4 +15,7 @@ router.get("/:courseId/videos", courseController.getCourseVideos);
 router.get("/:courseId/content", authMiddleware, courseController.getCourseContent);
 router.get("/:courseId/progress", authMiddleware, courseController.getCourseProgress);
 
+// Delete course
+router.delete("/:courseId", authMiddleware, courseController.deleteCourse);
+
 module.exports = router;
