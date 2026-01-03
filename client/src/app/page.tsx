@@ -1,33 +1,58 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 import { LoginModal, RegisterModal } from "@/components/AuthModals";
 
 export default function Home() {
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <>
       <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} />
       <RegisterModal isOpen={showRegister} onClose={() => setShowRegister(false)} />
       
-      <main className="min-h-screen flex flex-col overflow-y-auto bg-linear-to-b from-white via-blue-50/30 to-white">
+      <main className="min-h-screen flex flex-col overflow-y-auto bg-gradient-to-b from-white via-blue-50/30 to-white">
         {/* Auth Buttons - Fixed Top Right */}
         <div className="fixed top-0 right-0 z-50 p-4 sm:p-6">
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowLogin(true)}
-              className="px-5 py-2.5 text-gray-700 hover:text-blue-600 font-semibold transition-colors hover:bg-white/80 rounded-lg backdrop-blur-sm"
-            >
-              Login
-            </button>
-            <button
-              onClick={() => setShowRegister(true)}
-              className="px-6 py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-            >
-              Get Started Free
-            </button>
+            {user ? (
+              <Link
+                href="/dashboard"
+                className="px-6 py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2"
+              >
+                Go to Dashboard
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </Link>
+            ) : (
+              <>
+                <button
+                  onClick={() => setShowLogin(true)}
+                  className="px-5 py-2.5 text-gray-700 hover:text-blue-600 font-semibold transition-colors hover:bg-white/80 rounded-lg backdrop-blur-sm"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => setShowRegister(true)}
+                  className="px-6 py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                >
+                  Get Started Free
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -38,7 +63,7 @@ export default function Home() {
             {/* Main Heading */}
             <div className="mb-8 flex justify-center">
               <div className="relative">
-                <div className="w-20 h-20 bg-linear-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center shadow-xl">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center shadow-xl">
                   <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                   </svg>
@@ -50,53 +75,82 @@ export default function Home() {
             </div>
             
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              Learn Smarter,
-              <span className="bg-linear-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"> Not Harder</span>
+              {user ? `Welcome back, ${user.name || 'Learner'}!` : 'Learn Smarter,'}
+              {!user && <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"> Not Harder</span>}
             </h1>
             
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-10 leading-relaxed">
-              Transform any YouTube playlist into your personal learning journey. 
-              Track your progress, build streaks, and master new skills—one video at a time.
+              {user 
+                ? "Continue your learning journey. Track progress, maintain your streak, and master new skills with your curated YouTube playlists."
+                : "Transform any YouTube playlist into your personal learning journey. Track your progress, build streaks, and master new skills—one video at a time."
+              }
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-              <button
-                onClick={() => setShowRegister(true)}
-                className="group px-8 py-4 bg-blue-600 text-white font-semibold rounded-xl shadow-lg hover:bg-blue-700 transition-all hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2"
-              >
-                Start Learning Today
-                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </button>
-              <a
-                href="#features"
-                className="px-8 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:border-blue-500 hover:text-blue-600 transition-all flex items-center justify-center gap-2"
-              >
-                See How It Works
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </a>
+              {user ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="group px-8 py-4 bg-blue-600 text-white font-semibold rounded-xl shadow-lg hover:bg-blue-700 transition-all hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                  >
+                    View My Dashboard
+                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </Link>
+                  <Link
+                    href="/import-playlist"
+                    className="px-8 py-4 border-2 border-blue-600 text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Import New Playlist
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setShowRegister(true)}
+                    className="group px-8 py-4 bg-blue-600 text-white font-semibold rounded-xl shadow-lg hover:bg-blue-700 transition-all hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                  >
+                    Start Learning Today
+                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </button>
+                  <a
+                    href="#features"
+                    className="px-8 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:border-blue-500 hover:text-blue-600 transition-all flex items-center justify-center gap-2"
+                  >
+                    See How It Works
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </a>
+                </>
+              )}
             </div>
 
             {/* Social Proof */}
-            <div className="flex items-center justify-center gap-8 text-sm text-gray-500 flex-wrap">
-              <div className="flex items-center gap-2">
-                <div className="flex -space-x-2">
-                  <div className="w-8 h-8 rounded-full bg-linear-to-br from-blue-400 to-blue-600 border-2 border-white"></div>
-                  <div className="w-8 h-8 rounded-full bg-linear-to-br from-purple-400 to-purple-600 border-2 border-white"></div>
-                  <div className="w-8 h-8 rounded-full bg-linear-to-br from-green-400 to-green-600 border-2 border-white"></div>
+            {!user && (
+              <div className="flex items-center justify-center gap-8 text-sm text-gray-500 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <div className="flex -space-x-2">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 border-2 border-white"></div>
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 border-2 border-white"></div>
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-green-600 border-2 border-white"></div>
+                  </div>
+                  <span className="font-medium">Join thousands of learners</span>
                 </div>
-                <span className="font-medium">Join 1000+ learners</span>
+                <div className="flex items-center gap-1">
+                  <svg className="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  <span className="font-medium">Free forever</span>
+                </div>
               </div>
-              <div className="flex items-center gap-1">
-                <svg className="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-                <span className="font-medium">Free forever</span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 

@@ -11,7 +11,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
 
   // Landing page - no sidebar
-  const isLandingPage = pathname === "/" && !user;
+  const isLandingPage = pathname === "/";
 
   if (loading) {
     return (
