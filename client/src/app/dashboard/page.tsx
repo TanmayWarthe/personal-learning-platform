@@ -156,7 +156,7 @@ export default function DashboardPage() {
         />
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-full mx-auto px-4 py-6">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="flex flex-col gap-6 p-6 lg:p-8">
             {/* Header */}

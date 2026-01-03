@@ -35,14 +35,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   // Authenticated or other pages with sidebar
   return (
-    <div className="min-h-screen bg-gray-50 relative flex">
+    <div className="min-h-screen bg-gray-50 flex">
       <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
       <main
-        className={`min-h-screen flex-1 flex flex-col overflow-y-auto transition-all duration-300 ${
-          sidebarOpen ? "md:ml-64" : "md:ml-16"
+        className={`min-h-screen w-full flex-1 transition-all duration-300 ${
+          sidebarOpen ? "md:ml-64" : "md:ml-20"
         }`}
       >
-        {children}
+        <div className="h-full w-full">
+          {children}
+        </div>
       </main>
     </div>
   );

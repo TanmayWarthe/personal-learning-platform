@@ -224,7 +224,7 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
       )}
       {/* Top Navigation */}
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-full mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <button
               onClick={() => router.push(`/course/${id}`)}
@@ -244,7 +244,7 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-full mx-auto px-4 py-6">
         <div className={`grid grid-cols-1 gap-8 transition-all duration-300 ${sidebarCollapsed ? 'lg:grid-cols-1' : 'lg:grid-cols-3'}`}>
           {/* Left Column - Sidebar */}
           {!sidebarCollapsed && (
