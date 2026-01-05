@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- Courses table
 CREATE TABLE IF NOT EXISTS courses (
     id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     playlist_id VARCHAR(255),
@@ -61,6 +62,7 @@ CREATE TABLE IF NOT EXISTS user_learning_streak (
 );
 
 -- Indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_courses_user_id ON courses(user_id);
 CREATE INDEX IF NOT EXISTS idx_videos_course_id ON videos(course_id);
 CREATE INDEX IF NOT EXISTS idx_videos_module_id ON videos(module_id);
 CREATE INDEX IF NOT EXISTS idx_user_video_progress_user_id ON user_video_progress(user_id);

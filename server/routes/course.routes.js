@@ -6,9 +6,9 @@ const authMiddleware = require("../middleware/auth.middleware");
 // Protected: Import playlist requires authentication
 router.post("/import-playlist", authMiddleware, courseController.importPlaylist);
 
-// Public course listing/details (with optional auth for progress)
-router.get("/", authMiddleware.optional, courseController.getAllCourses);
-router.get("/:courseId", courseController.getCourseById);
+// Protected: Course listing requires authentication (now user-specific)
+router.get("/", authMiddleware, courseController.getAllCourses);
+router.get("/:courseId", authMiddleware, courseController.getCourseById);
 router.get("/:courseId/videos", courseController.getCourseVideos);
 
 // Authenticated, user-specific data

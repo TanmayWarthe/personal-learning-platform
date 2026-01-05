@@ -41,6 +41,18 @@ exports.markVideoCompleted = async (req, res) => {
     const userId = req.user.userId;
     const { videoId } = req.params;
 
+    // Verify that the video belongs to one of the user's courses
+    const videoCheck = await pool.query(
+      `SELECT v.id FROM videos v
+       JOIN courses c ON v.course_id = c.id
+       WHERE v.id = $1 AND c.user_id = $2`,
+      [videoId, userId]
+    );
+
+    if (videoCheck.rows.length === 0) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
     const check = await pool.query(
       "SELECT 1 FROM user_video_progress WHERE user_id=$1 AND video_id=$2",
       [userId, videoId]

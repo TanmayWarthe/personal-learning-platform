@@ -229,7 +229,7 @@ export default function DashboardPage() {
                   <div>
                     <p className="text-sm text-blue-700/80">Continue Learning</p>
                     <h2 className="text-xl font-semibold mt-1 text-gray-900">{continueLearning.title}</h2>
-                    <p className="text-blue-700/80 text-sm mt-1">Course ID: {continueLearning.course_id}</p>
+                   {  /*<p className="text-blue-700/80 text-sm mt-1">Course ID: {continueLearning.course_id}</p>*/}
                   </div>
                   <button
                     onClick={() => router.push(`/course/${continueLearning.course_id}/video/${continueLearning.id}`)}

@@ -4,7 +4,11 @@ async function getAllCourses(req, res) {
   try {
     const userId = req.user && req.user.userId;
 
-    // Get all courses with video counts
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Get only THIS user's courses with video counts
     const coursesResult = await pool.query(
       `SELECT 
         c.id, 
@@ -14,8 +18,10 @@ async function getAllCourses(req, res) {
         COUNT(DISTINCT v.id) as video_count
        FROM courses c
        LEFT JOIN videos v ON v.course_id = c.id
+       WHERE c.user_id = $1
        GROUP BY c.id, c.title, c.description, c.created_at
-       ORDER BY c.created_at DESC`
+       ORDER BY c.created_at DESC`,
+      [userId]
     );
 
     const courses = coursesResult.rows;
@@ -52,13 +58,8 @@ async function getAllCourses(req, res) {
       return res.json(coursesWithProgress);
     }
 
-    // For non-authenticated users, just return courses with video counts
-    const coursesWithCounts = courses.map(course => ({
-      ...course,
-      video_count: parseInt(course.video_count) || 0,
-    }));
-
-    res.json(coursesWithCounts);
+    // Fallback (should not reach here due to auth check above)
+    res.json([]);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -69,10 +70,15 @@ async function getAllCourses(req, res) {
 async function getCourseById(req, res) {
   try {
     const { courseId } = req.params;
+    const userId = req.user && req.user.userId;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
 
     const result = await pool.query(
-      "SELECT id, title, description FROM courses WHERE id = $1",
-      [courseId]
+      "SELECT id, title, description FROM courses WHERE id = $1 AND user_id = $2",
+      [courseId, userId]
     );
 
     if (result.rows.length === 0) {
@@ -140,10 +146,16 @@ async function importPlaylist(req, res) {
 
     console.log("Inserting course into database...");
 
-    //  Insert course in db
+    // Get authenticated user
+    const userId = req.user && req.user.userId;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    //  Insert course in db with user_id
     const courseResult = await pool.query(
-      "INSERT INTO courses (title, description, playlist_id) VALUES ($1, $2, $3) RETURNING id",
-      [title, description || "", finalPlaylistId]
+      "INSERT INTO courses (user_id, title, description, playlist_id) VALUES ($1, $2, $3, $4) RETURNING id",
+      [userId, title, description || "", finalPlaylistId]
     );
 
     const courseId = courseResult.rows[0].id;
@@ -359,18 +371,18 @@ async function deleteCourse(req, res) {
 
     console.log(`User ${userId} attempting to delete course ${courseId}`);
 
-    // Check if course exists
+    // Check if course exists AND belongs to this user
     const courseCheck = await pool.query(
-      "SELECT id FROM courses WHERE id = $1",
-      [courseId]
+      "SELECT id FROM courses WHERE id = $1 AND user_id = $2",
+      [courseId, userId]
     );
 
     if (courseCheck.rows.length === 0) {
-      return res.status(404).json({ message: "Course not found" });
+      return res.status(404).json({ message: "Course not found or unauthorized" });
     }
 
     // Delete course (CASCADE will handle modules, videos, and progress)
-    await pool.query("DELETE FROM courses WHERE id = $1", [courseId]);
+    await pool.query("DELETE FROM courses WHERE id = $1 AND user_id = $2", [courseId, userId]);
 
     console.log(`Course ${courseId} deleted successfully`);
 

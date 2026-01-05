@@ -7,7 +7,10 @@ exports.getDashboardSummary = async (req, res) => {
 
     /* ================= TOTAL VIDEOS ================= */
     const totalVideosResult = await pool.query(
-      "SELECT COUNT(*) FROM videos"
+      `SELECT COUNT(*) FROM videos v
+       JOIN courses c ON v.course_id = c.id
+       WHERE c.user_id = $1`,
+      [userId]
     );
     const totalVideos = Number(totalVideosResult.rows[0].count);
 
@@ -37,10 +40,9 @@ exports.getDashboardSummary = async (req, res) => {
 
     /* ================= COURSES ENROLLED ================= */
     const enrolledCoursesResult = await pool.query(
-      `SELECT COUNT(DISTINCT v.course_id) AS count
-       FROM user_video_progress uvp
-       JOIN videos v ON v.id = uvp.video_id
-       WHERE uvp.user_id = $1`,
+      `SELECT COUNT(*) AS count
+       FROM courses
+       WHERE user_id = $1`,
       [userId]
     );
     const coursesEnrolled = Number(enrolledCoursesResult.rows[0]?.count || 0);
@@ -50,10 +52,12 @@ exports.getDashboardSummary = async (req, res) => {
       `
       SELECT v.id, v.title, v.course_id
       FROM videos v
+      JOIN courses c ON v.course_id = c.id
       LEFT JOIN user_video_progress uvp
         ON v.id = uvp.video_id
         AND uvp.user_id = $1
-      WHERE uvp.completed IS NULL OR uvp.completed = false
+      WHERE c.user_id = $1
+        AND (uvp.completed IS NULL OR uvp.completed = false)
       ORDER BY v.id ASC
       LIMIT 1
       `,
