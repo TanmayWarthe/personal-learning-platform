@@ -73,7 +73,7 @@ export default function Navbar({
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setOpen(!open)}
-                    className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-500 text-white font-bold flex items-center justify-center shadow-md border-2 border-white hover:scale-105 transition-transform"
+                    className="w-10 h-10 rounded-full bg-linear-to-br from-blue-600 to-indigo-500 text-white font-bold flex items-center justify-center shadow-md border-2 border-white hover:scale-105 transition-transform"
                     aria-label="Open profile menu"
                   >
                     {userInitial}

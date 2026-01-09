@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Toast, { type ToastType } from "@/components/Toast";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/api";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faExclamationCircle, faArrowLeft, faChevronRight, faChevronLeft, faCheckCircle, faPlay, faExternalLinkAlt, faCirclePlay, faCircleCheck, faCheck, faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 
 type Video = {
   id: number;
@@ -179,9 +181,7 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <FontAwesomeIcon icon={faExclamationCircle} className="w-8 h-8 text-red-600" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Video not found</h3>
           <p className="text-gray-600 mb-4">The video you're looking for doesn't exist or has been removed.</p>
@@ -230,9 +230,7 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
               onClick={() => router.push(`/course/${id}`)}
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors font-medium"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
+              <FontAwesomeIcon icon={faArrowLeft} className="w-5 h-5" />
               Back to Course
             </button>
             <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -263,9 +261,7 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
                         className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
                         title="Collapse sidebar"
                       >
-                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                        </svg>
+                        <FontAwesomeIcon icon={faChevronRight} className="w-4 h-4 text-gray-600" />
                       </button>
                     </div>
                   </div>
@@ -273,17 +269,12 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
                 <div className="flex items-center gap-2">
                   {isCompleted ? (
                     <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded-full">
-                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
+                      <FontAwesomeIcon icon={faCheckCircle} className="w-3.5 h-3.5" />
                       Completed
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded-full">
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                      <FontAwesomeIcon icon={faCirclePlay} className="w-3.5 h-3.5" />
                       In Progress
                     </span>
                   )}
@@ -324,16 +315,12 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
                 >
                   {isCompleted ? (
                     <>
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
+                      <FontAwesomeIcon icon={faCircleCheck} className="w-5 h-5" />
                       Lesson Completed
                     </>
                   ) : (
                     <>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                      </svg>
+                      <FontAwesomeIcon icon={faCheck} className="w-5 h-5" />
                       Mark as Complete
                     </>
                   )}
@@ -350,9 +337,7 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
                         : 'border-gray-300 text-gray-400 cursor-not-allowed'
                     }`}
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                    </svg>
+                    <FontAwesomeIcon icon={faChevronLeft} className="w-4 h-4" />
                     Previous
                   </button>
                   <button
@@ -365,9 +350,7 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
                     }`}
                   >
                     Next
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                    </svg>
+                    <FontAwesomeIcon icon={faChevronRight} className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -402,9 +385,7 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
                             : 'bg-gray-100 text-gray-400'
                         }`}>
                           {lesson.completed ? (
-                            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
+                            <FontAwesomeIcon icon={faCheckCircle} className="w-3.5 h-3.5" />
                           ) : (
                             <span className="text-xs font-semibold">{lesson.position}</span>
                           )}
@@ -436,9 +417,7 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
                 onClick={() => setSidebarCollapsed(false)}
                 className="mb-4 w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                </svg>
+                <FontAwesomeIcon icon={faChevronLeft} className="w-5 h-5" />
                 <span className="font-semibold">Show Course Lessons</span>
               </button>
             )}
@@ -467,9 +446,7 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-blue-600 font-medium shrink-0 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
+                    <FontAwesomeIcon icon={faExternalLinkAlt} className="w-4 h-4" />
                     Open in YouTube
                   </a>
                 </div>
@@ -509,9 +486,7 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
                   {/* Custom Player Badge */}
                   <div className="absolute top-4 right-4 z-20">
                     <div className="bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-lg flex items-center gap-2 border border-white/20 shadow-lg">
-                      <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                      </svg>
+                      <FontAwesomeIcon icon={faCirclePlay} className="w-4 h-4 text-red-500" />
                       <span className="text-xs font-semibold text-white">VIDEO</span>
                     </div>
                   </div>
@@ -533,16 +508,12 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
                     >
                       {isCompleted ? (
                         <>
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
+                          <FontAwesomeIcon icon={faCircleCheck} className="w-5 h-5" />
                           Lesson Completed
                         </>
                       ) : (
                         <>
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                          </svg>
+                          <FontAwesomeIcon icon={faCheck} className="w-5 h-5" />
                           Mark as Complete
                         </>
                       )}
@@ -553,9 +524,7 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
                         className="px-6 py-3 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
                       >
                         Next Lesson
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                        </svg>
+                        <FontAwesomeIcon icon={faChevronRight} className="w-5 h-5" />
                       </button>
                     )}
                   </div>
@@ -572,9 +541,7 @@ export default function VideoPage({ params, onProgressUpdate, onDashboardUpdate 
             {/* YouTube Disclaimer */}
             <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
               <div className="flex items-start gap-3">
-                <svg className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <FontAwesomeIcon icon={faInfoCircle} className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-sm text-blue-800 font-medium mb-0.5">Video hosted on YouTube</p>
                   <p className="text-xs text-blue-700">

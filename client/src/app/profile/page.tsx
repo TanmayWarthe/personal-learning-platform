@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Toast, { type ToastType } from "@/components/Toast";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/api";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTimes, faPencilAlt } from "@fortawesome/free-solid-svg-icons";
 
 type User = {
   name: string;
@@ -164,9 +166,7 @@ export default function ProfilePage() {
       <main className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <FontAwesomeIcon icon={faTimes} className="w-8 h-8 text-red-500" />
           </div>
           <p className="text-red-600">{error}</p>
         </div>
@@ -207,9 +207,7 @@ export default function ProfilePage() {
                       onClick={() => setIsEditing(true)}
                       className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center"
                     >
-                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
+                      <FontAwesomeIcon icon={faPencilAlt} className="w-4 h-4 text-white" />
                     </button>
                   )}
                 </div>

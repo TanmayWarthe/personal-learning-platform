@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Toast, { type ToastType } from "@/components/Toast";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/api";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTimes, faGraduationCap, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 
 export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { refreshUser } = useAuth();
@@ -60,17 +62,12 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
               aria-label="Close"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <FontAwesomeIcon icon={faTimes} className="w-6 h-6" />
             </button>
 
             <div className="text-center mb-6">
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 mb-3">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l9-5-9-5-9 5 9 5z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                </svg>
+                <FontAwesomeIcon icon={faGraduationCap} className="w-6 h-6 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900">Welcome Back</h2>
               <p className="text-gray-600 mt-1 text-sm">Sign in to continue learning</p>
@@ -196,16 +193,12 @@ export function RegisterModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
               aria-label="Close"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <FontAwesomeIcon icon={faTimes} className="w-6 h-6" />
             </button>
 
             <div className="text-center mb-6">
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 mb-3">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
+                <FontAwesomeIcon icon={faUserPlus} className="w-6 h-6 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900">Create Account</h2>
               <p className="text-gray-600 mt-1 text-sm">Join us and start learning today</p>
