@@ -3,9 +3,40 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const helmet = require("helmet");
+const compression = require("compression");
+const rateLimit = require("express-rate-limit");
 const initializeDatabase = require("./utils/initDatabase");
+const errorHandler = require("./middleware/errorHandler");
 
 initializeDatabase();
+
+// Security: Helmet helps secure Express apps by setting HTTP headers
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable for API
+  crossOriginEmbedderPolicy: false
+}));
+
+// Performance: Compress responses
+app.use(compression());
+
+// Rate limiting to prevent abuse
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply rate limiting to all API routes
+app.use('/auth', rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5, // More strict for auth routes
+  message: 'Too many login attempts, please try again later.'
+}));
+
+app.use(limiter);
 
 const allowedOrigins = [
   "http://localhost:3000",
@@ -31,25 +62,27 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
+
 app.use(cookieParser());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // Add limit for security
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 app.get('/health', async (req, res) => {
   try {
     const pool = require('./config/db');
     await pool.query('SELECT 1');
     res.json({
-      status: 'ok',
+      status: 'healthy',
       database: 'connected',
-      jwt_secret: process.env.JWT_SECRET ? 'configured' : 'missing',
-      node_env: process.env.NODE_ENV,
-      timestamp: new Date().toISOString()
+      environment: process.env.NODE_ENV || 'development',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime()
     });
   } catch (error) {
-    res.status(500).json({
-      status: 'error',
+    res.status(503).json({
+      status: 'unhealthy',
       database: 'disconnected',
-      error: error.message
+      error: process.env.NODE_ENV === 'production' ? 'Service unavailable' : error.message
     });
   }
 });
@@ -73,9 +106,20 @@ app.use("/progress", progressRoutes);
 const videoRoutes = require("./routes/video.routes");
 app.use("/videos", videoRoutes);
 
+// 404 handler for unknown routes
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'Route not found'
+  });
+});
+
+// Global error handler (must be last)
+app.use(errorHandler);
+
 const port = process.env.PORT || 5000; 
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(`Server running on port ${port} in ${process.env.NODE_ENV || 'development'} mode`);
 });
 
 const authMiddleware = require("./middleware/auth.middleware");
