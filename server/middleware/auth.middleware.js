@@ -1,7 +1,6 @@
 const jwt = require("jsonwebtoken");
 
 function authMiddleware(req, res, next) {
-  // Prefer HTTP-only cookie set by backend; fallback to bearer header
   const bearer = req.headers.authorization?.split(" ")[1];
   const token = req.cookies?.token || bearer;
 
@@ -18,7 +17,6 @@ function authMiddleware(req, res, next) {
   }
 }
 
-// Optional auth middleware - doesn't require auth but adds user if available
 function optionalAuthMiddleware(req, res, next) {
   const bearer = req.headers.authorization?.split(" ")[1];
   const token = req.cookies?.token || bearer;
@@ -28,7 +26,6 @@ function optionalAuthMiddleware(req, res, next) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       req.user = decoded;
     } catch (error) {
-      // Invalid token, but continue without user
       req.user = null;
     }
   }

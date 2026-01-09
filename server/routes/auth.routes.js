@@ -6,7 +6,4 @@ router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.post("/logout", logoutUser);
 
-// router.post("/dashboard" , dashboard);
-// router.post("/profile" , profile);
-
 module.exports = router;

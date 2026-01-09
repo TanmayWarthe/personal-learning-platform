@@ -29,7 +29,6 @@ async function updateMe(req, res) {
       return res.status(400).json({ message: "Name and email are required" });
     }
 
-    // Ensure email is unique (excluding current user)
     const existing = await pool.query(
       "SELECT id FROM users WHERE email = $1 AND id <> $2",
       [email, userId]

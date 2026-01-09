@@ -7,7 +7,6 @@ export default function RegisterPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect to homepage where register modal can be opened
     router.replace("/");
   }, [router]);
 

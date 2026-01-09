@@ -43,7 +43,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
     function logout() {
-    // Call backend logout endpoint to clear cookie
     apiFetch("/auth/logout", {
       method: "POST",
     }).finally(() => {

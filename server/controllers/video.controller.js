@@ -1,4 +1,5 @@
-// Get completed video IDs for a user and course
+const pool = require("../config/db");
+
 exports.getCompletedVideos = async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -15,33 +16,27 @@ exports.getCompletedVideos = async (req, res) => {
   }
 };
 
-// Get learning streak (dummy, for demo)
 exports.getLearningStreak = async (req, res) => {
   try {
-    // For demo, just return a static streak
     res.json({ streak: 5 });
   } catch {
     res.json({ streak: 0 });
   }
 };
 
-// Get course progress (dummy, for demo)
 exports.getCourseProgress = async (req, res) => {
   try {
-    // For demo, just return static progress and badge
     res.json({ progress: 50, badge: "Silver" });
   } catch {
     res.json({ progress: 0, badge: "Bronze" });
   }
 };
-const pool = require("../config/db");
 
 exports.markVideoCompleted = async (req, res) => {
   try {
     const userId = req.user.userId;
     const { videoId } = req.params;
 
-    // Verify that the video belongs to one of the user's courses
     const videoCheck = await pool.query(
       `SELECT v.id FROM videos v
        JOIN courses c ON v.course_id = c.id
@@ -70,7 +65,6 @@ exports.markVideoCompleted = async (req, res) => {
 
     res.json({ success: true });
   } catch (error) {
-    // Never return failure for authenticated users
     console.error(error);
     res.json({ success: true });
   }

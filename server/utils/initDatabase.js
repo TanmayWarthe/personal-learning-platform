@@ -6,7 +6,6 @@ async function initializeDatabase() {
   try {
     console.log("Checking database tables...");
 
-    // Check if tables exist
     const checkQuery = `
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
@@ -21,11 +20,9 @@ async function initializeDatabase() {
     if (!tablesExist) {
       console.log("Tables don't exist. Creating database schema...");
 
-      // Read schema.sql file
       const schemaPath = path.join(__dirname, "../database/schema.sql");
       const schema = fs.readFileSync(schemaPath, "utf-8");
 
-      // Execute schema
       await pool.query(schema);
 
       console.log("✅ Database schema created successfully!");
@@ -34,7 +31,6 @@ async function initializeDatabase() {
     }
   } catch (error) {
     console.error("❌ Error initializing database:", error.message);
-    // Don't exit - let the app continue, user can initialize manually
   }
 }
 

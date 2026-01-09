@@ -32,7 +32,6 @@ export default function ProfilePage() {
   const [tempEmail, setTempEmail] = useState("");
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !authUser) {
       setToast({ message: "Please login to view your profile", type: "info" });
@@ -43,23 +42,19 @@ export default function ProfilePage() {
   }, [authUser, authLoading, router]);
 
   useEffect(() => {
-    // Only fetch profile data if user is authenticated
     if (!authUser || authLoading) return;
 
     async function fetchProfile() {
       setLoading(true);
       setError("");
       try {
-        // Fetch user info
         const userRes = await apiFetch("/users/me");
         if (!userRes.ok) throw new Error("Not authenticated");
         const userData = await userRes.json();
 
-        // Fetch stats
         const statsRes = await apiFetch("/dashboard/summary");
         const statsData = await statsRes.json();
 
-        // Fetch streak
         const streakRes = await apiFetch("/progress/streak");
         const streakData = await streakRes.json();
 

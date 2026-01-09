@@ -5,10 +5,8 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const initializeDatabase = require("./utils/initDatabase");
 
-// Initialize database tables on startup
 initializeDatabase();
 
-// middleware setup 
 const allowedOrigins = [
   "http://localhost:3000",
   "https://self-learning-hub.vercel.app",
@@ -18,7 +16,6 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
       
       if (allowedOrigins.includes(origin)) {
@@ -37,7 +34,6 @@ app.use(
 app.use(cookieParser());
 app.use(express.json());
 
-// Health check endpoint
 app.get('/health', async (req, res) => {
   try {
     const pool = require('./config/db');
@@ -58,9 +54,6 @@ app.get('/health', async (req, res) => {
   }
 });
 
-
-// routes setup 
-
 const authRoutes = require("./routes/auth.routes");
 app.use("/auth", authRoutes);
 
@@ -80,17 +73,11 @@ app.use("/progress", progressRoutes);
 const videoRoutes = require("./routes/video.routes");
 app.use("/videos", videoRoutes);
 
-
-
-// start server
 const port = process.env.PORT || 5000; 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
 
-
-
-// protected route example
 const authMiddleware = require("./middleware/auth.middleware");
 app.get("/dashboard", authMiddleware, (req, res) => {
   res.json({

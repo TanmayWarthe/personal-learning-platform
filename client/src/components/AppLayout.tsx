@@ -33,7 +33,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Authenticated or other pages with sidebar
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />

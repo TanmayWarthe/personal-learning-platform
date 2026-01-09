@@ -23,7 +23,7 @@ export default function Home() {
       <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} />
       <RegisterModal isOpen={showRegister} onClose={() => setShowRegister(false)} />
       
-      <main className="min-h-screen flex flex-col overflow-y-auto bg-gradient-to-b from-white via-blue-50/30 to-white">
+      <main className="min-h-screen flex flex-col overflow-y-auto bg-linear-to-b from-white via-blue-50/30 to-white">
         {/* Auth Buttons - Fixed Top Right */}
         <div className="fixed top-0 right-0 z-50 p-4 sm:p-6">
           <div className="flex items-center gap-3">
@@ -63,7 +63,7 @@ export default function Home() {
             {/* Main Heading */}
             <div className="mb-8 flex justify-center">
               <div className="relative">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center shadow-xl">
+                <div className="w-20 h-20 bg-linear-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center shadow-xl">
                   <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                   </svg>
@@ -76,7 +76,7 @@ export default function Home() {
             
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
               {user ? `Welcome back, ${user.name || 'Learner'}!` : 'Learn Smarter,'}
-              {!user && <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"> Not Harder</span>}
+              {!user && <span className="bg-linear-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"> Not Harder</span>}
             </h1>
             
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-10 leading-relaxed">
@@ -137,9 +137,9 @@ export default function Home() {
               <div className="flex items-center justify-center gap-8 text-sm text-gray-500 flex-wrap">
                 <div className="flex items-center gap-2">
                   <div className="flex -space-x-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 border-2 border-white"></div>
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 border-2 border-white"></div>
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-green-600 border-2 border-white"></div>
+                    <div className="w-8 h-8 rounded-full bg-linear-to-br from-blue-400 to-blue-600 border-2 border-white"></div>
+                    <div className="w-8 h-8 rounded-full bg-linear-to-br from-purple-400 to-purple-600 border-2 border-white"></div>
+                    <div className="w-8 h-8 rounded-full bg-linear-to-br from-green-400 to-green-600 border-2 border-white"></div>
                   </div>
                   <span className="font-medium">Join thousands of learners</span>
                 </div>

@@ -16,7 +16,6 @@ async function fetchPlaylistVideos(playlistId) {
 
     console.log("YouTube API response status:", response.status);
     
-    // 🛑 SAFETY CHECK
     if (!data.items) {
       console.error("YouTube API error:", data.error);
       throw new Error(
@@ -26,7 +25,6 @@ async function fetchPlaylistVideos(playlistId) {
 
     console.log(`Fetched ${data.items.length} videos from this page`);
 
-    // Map items to video objects
     const videos = data.items.map((item) => ({
       title: item.snippet.title,
       youtube_video_id: item.snippet.resourceId.videoId,

@@ -2,7 +2,6 @@ const bcrypt = require("bcrypt");
 const pool = require("../config/db");
 const jwt = require("jsonwebtoken");
 
-/* ================= REGISTER ================= */
 async function registerUser(req, res) {
   try {
     const { name, email, password } = req.body;
@@ -79,7 +78,6 @@ async function registerUser(req, res) {
   }
 }
 
-/* ================= LOGIN ================= */
 async function loginUser(req, res) {
   try {
     const { email, password } = req.body;
@@ -122,7 +120,7 @@ async function loginUser(req, res) {
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // THIS IS KEY
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -137,7 +135,6 @@ async function loginUser(req, res) {
   }
 }
 
-/* ================= LOGOUT ================= */
 function logoutUser(req, res) {
   res.clearCookie("token", {
     httpOnly: true,

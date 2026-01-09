@@ -1,7 +1,6 @@
 const { Pool } = require("pg");
 require("dotenv").config();
 
-// Support both DATABASE_URL (Render/Heroku) and individual variables (Railway)
 const pool = new Pool(
   process.env.DATABASE_URL
     ? {
@@ -19,7 +18,6 @@ const pool = new Pool(
       }
 );
 
-// Test database connection
 pool.on('connect', () => {
   console.log('✅ Database connected successfully');
 });
